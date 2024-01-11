@@ -1,5 +1,5 @@
 # uvmf-core-mkdv
-Core UVM Framework libraries with modifications for mkdv
+Core UVM Framework libraries with modifications to support FuseSoC
 
 The UVM Framework is a set of base UVM components and automation 
 scripts created by Siemens EDA. Find more information, including
