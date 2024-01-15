@@ -59,12 +59,12 @@ class uvmf_environment_configuration_base extends uvm_object;
                                     );
 
       `uvm_info("CFG", 
-                $psprintf("Interfaces for the following uvm environment hierarchy %s", environment_path),
+                $sformatf("Interfaces for the following uvm environment hierarchy %s", environment_path),
                 UVM_DEBUG)
 
       foreach ( interface_names[if_name]) begin
          `uvm_info("CFG", 
-                   $psprintf("   interface_names[%d] = %s interface_activity[%d] = %s", if_name, interface_names[if_name], if_name, interface_activity[if_name]),
+                   $sformatf("   interface_names[%d] = %s interface_activity[%d] = %s", if_name, interface_names[if_name], if_name, interface_activity[if_name]),
                    UVM_DEBUG)
       end
 

@@ -148,7 +148,7 @@ class uvmf_transaction_base extends uvm_sequence_item;
   // FUNCTION: convert2string
   // Has <unique_transaction_id>, but will need to added to by derived classs.
   virtual function string convert2string();
-       return $psprintf(" unique_transaction_id=%d key=%d", unique_transaction_id, key);
+       return $sformatf(" unique_transaction_id=%d key=%d", unique_transaction_id, key);
   endfunction
 
   // FUNCTION: set_key

@@ -130,7 +130,7 @@ virtual class uvmf_parameterized_agent_configuration_base #(
       this.interface_name = interface_name;
 
     `uvm_info("CFG", 
-              $psprintf("The agent at '%s' is using interface named %s and is configured as %s", agent_path, interface_name, activity),
+              $sformatf("The agent at '%s' is using interface named %s and is configured as %s", agent_path, interface_name, activity),
               UVM_DEBUG)
 
       // Checking the config_db
