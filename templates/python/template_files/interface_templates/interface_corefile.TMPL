@@ -1,0 +1,25 @@
+{% set fname = "{{vip_location}}/{{interface_location}}/{{name}}_pkg/{{name}}.core" %}
+CAPI=2:
+
+name: uvmf:interfaces:{{name}}
+
+filesets:
+  hvl:
+    files:
+    - "sv-uvm ? ({{name}}_pkg_hdl.sv)":
+         include_path: "."
+    - "sv-uvm ? ({{name}}_pkg.sv)":
+         include_path: "."
+    - "sv-uvm ? (src/{{name}}_if.sv)"
+    - "sv-uvm ? (src/{{name}}_monitor_bfm.sv)"
+    - "sv-uvm ? (src/{{name}}_driver_bfm.sv)"
+    file_type: systemVerilogSource
+    depend:
+      - ":uvmf:base_pkg"
+
+# TODO: add in DPI filesets
+
+targets:
+  default:
+    filesets:
+      - hvl

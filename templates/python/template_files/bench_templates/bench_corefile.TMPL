@@ -1,0 +1,28 @@
+{% set fname = "{{bench_location}}/{{name}}/{{name}}.core" %}
+CAPI=2:
+
+name: uvmf:project_benches:{{name}}
+
+filesets:
+  hvl:
+    files:
+    - "sv-uvm ? (tb/parameters/{{name}}_parameters_pkg.sv)":
+         include_path: "tb/parameters"
+    - "sv-uvm ? (tb/sequences/{{name}}_sequences_pkg.sv)":
+         include_path: "tb/sequences"
+    - "sv-uvm ? (tb/tests/{{name}}_tests_pkg.sv)":
+         include_path: "tb/tests"
+    - "sv-uvm ? (tb/testbench/hdl_top.sv)":
+         include_path: "tb/testbench"
+    - "sv-uvm ? (tb/testbench/hvl_top.sv)":
+         include_path: "tb/testbench"
+    file_type: systemVerilogSource
+    depend:
+      - uvmf:environments:{{env_name}}
+
+# TODO: add in DPI filesets
+
+targets:
+  default:
+    filesets:
+      - hvl

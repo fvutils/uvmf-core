@@ -136,7 +136,9 @@ virtual class uvmf_parameterized_agent_configuration_base #(
       // Checking the config_db
       void'(uvm_config_db #(uvm_bitstream_t)::get(null,interface_name,"enable_transaction_viewing",enable_transaction_viewing));
     if( !uvm_config_db #( MONITOR_BFM_BIND_T )::get( null , UVMF_VIRTUAL_INTERFACES , interface_name , monitor_bfm ) ) begin
+   `ifndef XILINX_SIMULATOR
             $stacktrace;
+   `endif
             `uvm_fatal("CFG" , $sformatf("uvm_config_db #( MONITOR_BFM_BIND_T )::get cannot find monitor bfm resource with interface_name %s",interface_name) )
        end
 

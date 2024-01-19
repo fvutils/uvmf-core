@@ -65,7 +65,7 @@ if ( (int(s[0]) < 2) | ( (int(s[0]) == 2) & (int(s[1]) < 8))):
   print("ERROR : Jinja2 package version "+jinja2.__version__+" incorrect, must be 2.8 or later")
   print("Python version info:\n{}".format(sys.version))
   sys.exit(1)
-from jinja2._compat import string_types
+#from jinja2._compat import string_types
 
 ## Custom Template Loader - does everything the FileSystemLoader does but
 ## can specify a list of glob-type filters to pick up only specific template
@@ -74,7 +74,7 @@ from jinja2._compat import string_types
 class FileSystemFilterLoader(jinja2.FileSystemLoader):
   def __init__(self,searchpath,glob='*',encoding='utf-8',followlinks=False):
     super(FileSystemFilterLoader,self).__init__(searchpath,encoding,followlinks)
-    if isinstance(glob,string_types):
+    if isinstance(glob,str):
       glob = [glob]
     self.glob = glob
 

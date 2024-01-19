@@ -1,0 +1,30 @@
+
+package:
+  name: pytest-hdl
+
+  #  setup-deps:
+  #- ninja
+  #- cython
+
+  dep-sets:
+
+  - name: default
+    deps:
+    - name: pytest
+      src: pypi
+    - name: fusesoc
+      src: pypi
+
+  - name: default-dev
+    deps:
+    - name: pytest
+      src: pypi
+    - name: pytest-fv
+      url: https://github.com/fvutils/pytest-fv.git
+    - name: voluptuous
+      src: pypi
+    - name: jinja2
+      src: pypi
+
+
+

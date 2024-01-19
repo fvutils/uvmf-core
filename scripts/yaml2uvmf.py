@@ -71,8 +71,8 @@ except ImportError:
   sys.exit(1)
 
 def merge_summary(merge,verbose=False):
-  block_count = sum(len(l) for l in merge.found_blocks.itervalues())
-  new_block_count = sum(len(l) for l in merge.new_blocks.itervalues())
+  block_count = sum(len(l) for l in merge.found_blocks.values())
+  new_block_count = sum(len(l) for l in merge.new_blocks.values())
   if verbose:
     print("============================== Merge Details ==============================")
   print("  Parsed {0} original files finding a total of {1} \"pragma uvmf custom\" blocks".format(len(merge.rd), block_count))

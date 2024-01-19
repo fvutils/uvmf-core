@@ -1,6 +1,6 @@
 CAPI=2:
 
-name: siemens:uvmf:base_pkg:2023.1
+name: :uvmf:base_pkg:2023.1
 
 filesets:
   hvl:
@@ -9,7 +9,7 @@ filesets:
          include_path: "src"
     - "sv-uvm ? (uvmf_base_pkg.sv)":
          include_path: "src"
-    file_type: verilogSource
+    file_type: systemVerilogSource
 
 targets:
   default:
