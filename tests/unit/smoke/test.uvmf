@@ -1,0 +1,32 @@
+
+uvmf:
+  interfaces:
+    mem:
+      clock: clock
+      reset: reset
+      ports:
+        - name: addr
+          width: "32"
+          dir: output
+        - name: wdata
+          width: "32"
+          dir: output
+        - name: rdata
+          width: "32"
+          dir: input
+      transaction_vars:
+        - name: addr
+          type: "bit[31:0]"
+    
+  environments:
+    my_env:
+      agents:
+        - name: mem1
+          type: mem
+        - name: mem2
+          type: mem
+  
+  benches:
+    my_bench:
+      top_env: my_env
+
