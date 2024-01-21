@@ -2,10 +2,12 @@ import os
 import shutil
 import subprocess
 import sys
+import pytest
 import pytest_fv
 from pytest_fv import FuseSoc, HdlSim
 
-def test_smoke():
+@pytest.fixture(scope="session")
+def setup_sim():
     testdir = os.path.dirname(os.path.abspath(__file__))
     rundir = os.path.join(testdir, "rundir")
     uvmf_core_dir = os.path.abspath(
@@ -33,6 +35,8 @@ def test_smoke():
         stderr=sys.stdout
     )
 
+    assert res.returncode == 0
+
     fs = FuseSoc()
     fs.add_library(
         os.path.join(uvmf_core_dir, "uvmf_base_pkg"),
@@ -56,6 +60,14 @@ def test_smoke():
         sim.build(build_args)
     except Exception as e:
         print("Exception: %s" % str(e), flush=True)
+        raise e
+    
+    return (sim,build_args)
+
+def test_smoke_1(setup_sim):
+
+    sim = setup_sim[0]
+    build_args = setup_sim[1]
 
     run_args = sim.mkRunArgs(
         build_args.builddir,
@@ -64,7 +76,26 @@ def test_smoke():
     
     sim.run(run_args)
 
-    assert res.returncode == 0
+def test_smoke_2(setup_sim):
 
-    pass
+    sim = setup_sim[0]
+    build_args = setup_sim[1]
 
+    run_args = sim.mkRunArgs(
+        build_args.builddir,
+        build_args.builddir)
+    run_args.plusargs.append("UVM_TESTNAME=test_top")
+    
+    sim.run(run_args)
+
+def test_smoke_3(setup_sim):
+
+    sim = setup_sim[0]
+    build_args = setup_sim[1]
+
+    run_args = sim.mkRunArgs(
+        build_args.builddir,
+        build_args.builddir)
+    run_args.plusargs.append("UVM_TESTNAME=test_top")
+    
+    sim.run(run_args)
