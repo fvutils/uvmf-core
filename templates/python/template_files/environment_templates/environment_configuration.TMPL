@@ -20,7 +20,7 @@ extends uvmf_environment_configuration_base;
 {% for config in configVars %}
 {% if config.comment|length > 0 %}  // {{config.comment}}
 {% endif %}
-  {% if config.isrand %}rand {% endif %}{{config.type}} {{config.name}}{% if config.value != '' %} = {{config.value}}{% endif %};
+  {% if config.isrand %}rand {% endif %}{{config.type}} {{config.name}}{% if config.unpackedDim != '' %} {{config.unpackedDim}} {% endif %}{% if config.value != '' %} = {{config.value}}{% endif %};
 {% endfor %}
 
 //Constraints for the configuration variables:
@@ -32,14 +32,14 @@ extends uvmf_environment_configuration_base;
 
 {% for regModel in regModels %}
 // Instantiate the register model
-  {{regModel.regBlockClass}}  {{name}}_rm;
+  {{regModel.regBlockClass}}  {{regModel.regBlockInstance}};
 {% endfor %}
 
   covergroup {{name}}_configuration_cg;
     // pragma uvmf custom covergroup begin
     option.auto_bin_max=1024;
 {% for config in configVars %}
-    coverpoint {{config.name}};
+{% if config.unpackedDim != '' %}//{% endif %}    coverpoint {{config.name}};
 {% endfor %}
     // pragma uvmf custom covergroup end
   endgroup
@@ -67,6 +67,9 @@ rand {{sub_env.name}}_config_t {{sub_env.name}}_config;
     uvmf_active_passive_t                    {{sub_env.name}}_interface_activity[];
 {% endfor %}
 
+  typedef uvmf_virtual_sequencer_base #(.CONFIG_T({{name}}_env_configuration{{macro.paramUse(paramDefs)|indent(22)}})) {{name}}_vsqr_t;
+  {{name}}_vsqr_t vsqr;
+
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end
 
@@ -89,9 +92,20 @@ rand {{sub_env.name}}_config_t {{sub_env.name}}_config;
 {% for sub_env in qvipSubEnvironments %}
     {{sub_env.name}}_config = {{sub_env.envPkg}}_env_configuration::type_id::create("{{sub_env.name}}_config");
 {% endfor %}
+
+    {{name}}_configuration_cg=new;
+    `uvm_warning("COVERAGE_MODEL_REVIEW", "A covergroup has been constructed which may need review because of either generation or re-generation with merging.  Please note that configuration variables added as a result of re-generation and merging are not automatically added to the covergroup.  Remove this warning after the covergroup has been reviewed.")
+
   // pragma uvmf custom new begin
   // pragma uvmf custom new end
   endfunction
+
+// ****************************************************************************
+// FUNCTION : set_vsqr()
+// This function is used to assign the vsqr handle.
+  virtual function void set_vsqr( {{name}}_vsqr_t vsqr);
+     this.vsqr = vsqr;
+  endfunction : set_vsqr
 
 // ****************************************************************************
 // FUNCTION: post_randomize()
@@ -188,9 +202,9 @@ rand {{sub_env.name}}_config_t {{sub_env.name}}_config;
     // pragma uvmf custom reg_model_config_initialize begin
     // Register model creation and configuation
     if (register_model == null) begin
-      {{name}}_rm = {{regModel.regBlockClass}}::type_id::create("{{name}}_rm");
-      {{name}}_rm.build();
-      {{name}}_rm.lock_model();
+      {{regModel.regBlockInstance}} = {{regModel.regBlockClass}}::type_id::create("{{regModel.regBlockInstance}}");
+      {{regModel.regBlockInstance}}.build();
+      {{regModel.regBlockInstance}}.lock_model();
 {% if regModel.adapterType != 'None' %}
       enable_reg_adaptation = {% if regModel.useAdapter %}1{% else %}0{% endif %};
 {% endif %}
@@ -198,7 +212,7 @@ rand {{sub_env.name}}_config_t {{sub_env.name}}_config;
       enable_reg_prediction = {% if regModel.useExplicitPrediction %}1{% else %}0{% endif %};
 {% endif %}
     end else begin
-      $cast({{name}}_rm,register_model);
+      $cast({{regModel.regBlockInstance}},register_model);
 {% if regModel.transactionType != 'None' %}
       enable_reg_prediction = {% if regModel.useExplicitPrediction %}1{% else %}0{% endif %};
 {% endif %}
@@ -207,7 +221,7 @@ rand {{sub_env.name}}_config_t {{sub_env.name}}_config;
 {% endfor %}
 
 {% for sub_env in subEnvironments %}
-     {{sub_env.name}}_config.initialize( sim_level, {environment_path,".{{sub_env.name}}"}, {{sub_env.name}}_interface_names, {% if sub_env.regModelPkg != None %}{{name}}_rm.{{sub_env.name}}_rm{% else %}null{% endif %},   {{sub_env.name}}_interface_activity);
+     {{sub_env.name}}_config.initialize( sim_level, {environment_path,".{{sub_env.name}}"}, {{sub_env.name}}_interface_names, {% if ((sub_env.regModelPkg != None) and (regModels|length > 0)) %}{{regModels[0].regBlockInstance}}.{{sub_env.regBlockInstance}}{% else %}null{% endif %},   {{sub_env.name}}_interface_activity);
 {% endfor %}
 
 {% for sub_env in qvipSubEnvironments %}

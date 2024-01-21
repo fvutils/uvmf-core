@@ -37,13 +37,18 @@
 //       T - Specifies the type of transactions to be compared.
 //           Must be derived from uvmf_transaction_base.
 
-class uvmf_in_order_race_scoreboard #(type T = uvmf_transaction_base) extends uvmf_scoreboard_base#(T);
+class uvmf_in_order_race_scoreboard #(type T = uvmf_transaction_base, type BASE_T = uvmf_scoreboard_base#(T)) extends BASE_T;
 
-  `uvm_component_param_utils( uvmf_in_order_race_scoreboard #(T))
+  `uvm_component_param_utils( uvmf_in_order_race_scoreboard #(T,BASE_T))
 
    // Analysis fifo to queue up expected & actual transactions.
    T expected_results_q [$];
    T actual_results_q   [$];
+
+   // Local members for debug
+   T last_expected;
+   T last_actual;
+   bit last_mismatched = 0;
 
    // FUNCTION: new - Constructor
    function new(string name, uvm_component parent );
@@ -148,15 +153,19 @@ class uvmf_in_order_race_scoreboard #(type T = uvmf_transaction_base) extends uv
    // This function executes the compare function which causes the actual_transaction to 
    // compare itself with the expected transaction.
    function void compare_entries(T expected, T actual);
+      last_actual = actual;
+      last_expected = expected;
       // Compare actual transaction to expected transaction
       if (actual.compare(expected)) 
          begin : compare_passed
          match_count++;
          `uvm_info("SCBD",compare_message("MATCH! - ",expected,actual),UVM_MEDIUM)
+         last_mismatched = 0;
          end : compare_passed
       else 
          begin : compare_failed
          mismatch_count++;
+         last_mismatched = 1;
          `uvm_error("SCBD",compare_message("MISMATCH! - ",expected,actual))
          end : compare_failed
    endfunction

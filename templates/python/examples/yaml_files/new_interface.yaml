@@ -33,6 +33,7 @@ uvmf:
 #        - name: "typedef_name"
 #          type: "typedef_definition"
 #      ports: # Specify the port direction from the perspective of the INITIATOR or MASTER
+#          Valid values for dir include input, output, and inout.
 #        - name: "signal_name"   
 #          width: "signal_width"        
 #          dir: "signal_direction" 

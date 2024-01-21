@@ -152,7 +152,9 @@ class {{name}}_transaction {{macro.paramDeclare(paramDefs)|indent(6)}} extends u
   //
   virtual function void do_copy (uvm_object rhs);
     {{name}}_transaction {{macro.paramUse(paramDefs)|indent(8)}} RHS;
-    assert($cast(RHS,rhs));
+    if(!$cast(RHS,rhs))begin
+      `uvm_fatal("CAST","Transaction cast in do_copy() failed!")
+    end
     // pragma uvmf custom do_copy begin
     super.do_copy(rhs);
 {% for txn in transVars %}

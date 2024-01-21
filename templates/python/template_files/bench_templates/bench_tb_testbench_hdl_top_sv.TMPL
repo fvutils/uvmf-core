@@ -95,17 +95,18 @@ import uvmf_base_pkg_hdl::*;
      );
 {% endfor %}
 {% for bfm in bfms %}
-  {{bfm.ifPkg}}_monitor_bfm {{macro.paramUseNested(bfm.parameters)|indent(8)}} {{bfm.name}}_mon_bfm({{bfm.name}}_bus.monitor_port);
+  {{bfm.ifPkg}}_monitor_bfm {{macro.paramUseNested(bfm.parameters)|indent(8)}} {{bfm.name}}_mon_bfm({{bfm.name}}_bus);
 {% endfor %}
 {% for bfm in bfms %}
 {% if  bfm.activity == 'ACTIVE' %}
-  {{bfm.ifPkg}}_driver_bfm {{macro.paramUseNested(bfm.parameters)|indent(8)}} {{bfm.name}}_drv_bfm({{bfm.name}}_bus{% if bfm.initResp == "INITIATOR" %}.initiator_port{% else %}.responder_port{% endif %});
+  {{bfm.ifPkg}}_driver_bfm {{macro.paramUseNested(bfm.parameters)|indent(8)}} {{bfm.name}}_drv_bfm({{bfm.name}}_bus);
 {% endif %}
 {% endfor %}
 
   // pragma uvmf custom dut_instantiation begin
   // UVMF_CHANGE_ME : Add DUT and connect to signals in _bus interfaces listed above
   // Instantiate your DUT here
+  // ...
   // pragma uvmf custom dut_instantiation end
 
   initial begin  {% if veloceReady %}    // tbx vif_binding_block 

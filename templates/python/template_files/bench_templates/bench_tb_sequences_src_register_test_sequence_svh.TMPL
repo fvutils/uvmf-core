@@ -52,9 +52,9 @@ class register_test_sequence extends {{name}}_bench_sequence_base;
 
 {% if topEnvHasRegisterModel %}
     // Reset the register model
-    reg_model.reset();
+    {{regBlockInstance}}.reset();
     // Identify the register model to test
-    uvm_register_test_seq.model = reg_model;
+    uvm_register_test_seq.model = {{regBlockInstance}};
     // Perform the register test
     // Disable particular tests in sequence by commenting options below
     uvm_register_test_seq.tests = {

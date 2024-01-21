@@ -34,9 +34,9 @@
 // PARAMETERS:
 //     CONFIG_T      - The configuration class used for this environment.
 //
-class uvmf_environment_base #(type CONFIG_T=uvmf_environment_configuration_base ) extends uvm_env;
+class uvmf_environment_base #(type CONFIG_T = uvmf_environment_configuration_base, type BASE_T = uvm_env ) extends BASE_T;
 
-  `uvm_component_param_utils( uvmf_environment_base #(CONFIG_T))
+  `uvm_component_param_utils( uvmf_environment_base #(CONFIG_T, BASE_T))
 
   // Configuration class object handle
   CONFIG_T configuration;

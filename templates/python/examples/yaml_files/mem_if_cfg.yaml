@@ -104,15 +104,7 @@ uvmf:
       transaction_constraints:
         - name: "address_word_align_c"
           value: "{ address[1:0]==0; }"
-      # This structure defines how the interface will behave when
-      # configured as a RESPONDER (as opposed to an INITIATOR) 
-      response_info: 
-          # Define the conditions under which a response is 
-          # warranted
-          operation: "1'b1"
-          # Define the variables to send out when a response is
-          # triggered
-          data: ["read_data"]
+
       # Configuration variables
       config_vars:
         - name: "transfer_gap"

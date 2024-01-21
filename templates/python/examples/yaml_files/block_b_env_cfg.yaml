@@ -168,3 +168,4 @@ uvmf:
         maps:
           - name: "bus_map"
             interface: "control_plane_in"
+            qvip_agent: "False"

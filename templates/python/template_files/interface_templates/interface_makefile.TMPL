@@ -3,17 +3,17 @@
 # pragma uvmf custom additional begin
 # pragma uvmf custom additional end
 
-{{name}}_PKG         = \
+{{name}}_PKG         ?= \
 {% if useDpiLink %}	+incdir+$(UVMF_HOME)/common/dpi_link_pkg \
 {% endif %}
 	+incdir+$({{vipLibEnvVariable}})/{{interface_location}}/{{name}}_pkg \
 	-F $({{vipLibEnvVariable}})/{{interface_location}}/{{name}}_pkg/{{name}}_filelist_hvl.f 
 
-{{name}}_PKG_HDL         = \
+{{name}}_PKG_HDL         ?= \
 	+incdir+$({{vipLibEnvVariable}})/{{interface_location}}/{{name}}_pkg \
 	-F $({{vipLibEnvVariable}})/{{interface_location}}/{{name}}_pkg/{{name}}_filelist_hdl.f 
 
-{{name}}_PKG_XRTL         = \
+{{name}}_PKG_XRTL         ?= \
 	+incdir+$(UVMF_VIP_LIBRARY_HOME)/{{interface_location}}/{{name}}_pkg \
 	-F $(UVMF_VIP_LIBRARY_HOME)/{{interface_location}}/{{name}}_pkg/{{name}}_filelist_xrtl.f 
 
@@ -45,12 +45,12 @@ endif
 
 export {{name}}_IF_DPI_SRC ?= $({{vipLibEnvVariable}})/{{interface_location}}/{{name}}_pkg/dpi
 
-C_FILE_COMPILE_LIST_{{name}}_pkg	= \
+C_FILE_COMPILE_LIST_{{name}}_pkg	?= \
 {% for cFile in DPIFiles %}
 	$({{name}}_IF_DPI_SRC)/{{cFile}} \
 {% endfor %}
 
-O_FILE_COMPILE_LIST_{{name}}_pkg = $(notdir $(C_FILE_COMPILE_LIST_{{name}}_pkg:.c=.o))
+O_FILE_COMPILE_LIST_{{name}}_pkg ?= $(notdir $(C_FILE_COMPILE_LIST_{{name}}_pkg:.c=.o))
 
 GCC_COMP_ARGS_{{name}}_pkg	+= -I$({{name}}_IF_DPI_SRC) \
 	-fPIC {{DPICompArgs}}

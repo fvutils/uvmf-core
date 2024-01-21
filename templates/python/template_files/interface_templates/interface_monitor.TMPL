@@ -90,9 +90,11 @@ class {{name}}_monitor {{macro.paramDeclare(paramDefs)|indent(6)}} extends uvmf_
 {% else %}
     trans = monitored_trans;
 {% endif %}
+{% if veloceReady %}
     trans.start_time = time_stamp;                                                          
     trans.end_time = $time;                                                                 
-    time_stamp = trans.end_time; 
+    time_stamp = trans.end_time;
+{% endif %} 
     analyze(trans);                                                                         
   endfunction  
 

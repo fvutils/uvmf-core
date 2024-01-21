@@ -21,14 +21,14 @@
 //                   Mentor Graphics Inc
 //----------------------------------------------------------------------
 // Project         : UVM Framework
-// Unit            : Out of order scoreboard
-// File            : uvmf_out_of_order_scoreboard.svh
+// Unit            : Out of order race scoreboard
+// File            : uvmf_out_of_order_race_scoreboard.svh
 //----------------------------------------------------------------------
-// Creation Date   : 05.12.2011
+// Creation Date   : 07.06.2022
 //----------------------------------------------------------------------
 
-// CLASS: uvmf_out_of_order_scoreboard
-// This class defines an out of order scoreboard that is based on the uvmf_scoreboard_base class.
+// CLASS: uvmf_out_of_order_race_scoreboard
+// This class defines an out of order race scoreboard that is based on the uvmf_out_of_order_scoreboard class.
 // This scoreboard is a generic scoreboard that will compare two objects of type T. Class T
 // must be an extension of <uvmf_transaction_base>. Class T must have the following interfaces:
 // - compare() which takes an object of class T as an argument and returns a bit result
@@ -39,67 +39,43 @@
 // made about the relative timing of the two streams of data. Comparisons are initiated
 // by the arrival of transactions through the write interface.
 //
-// (see uvmf_out_of_order_scoreboard.jpg)
 //
 // PARAMETERS:
 //    T    - Specifies the type of transactions to be compared.
 //           Must be derived from uvmf_transaction_base.
 
-class uvmf_out_of_order_scoreboard #(type T=uvmf_transaction_base, type BASE_T = uvmf_scoreboard_base#(T)) extends BASE_T;
+class uvmf_out_of_order_race_scoreboard #(type T=uvmf_transaction_base, type BASE_T = uvmf_out_of_order_scoreboard #(T)) extends BASE_T;
 
-   `uvm_component_param_utils(uvmf_out_of_order_scoreboard #(T,BASE_T))
-
-   // Associative array of exptected transactions keyed with the integer accessed using
-   // the transactions get_key() interface.
-   T expected_hash[int unsigned];
-
-   T last_expected;
-   T last_actual;
-   bit last_mismatched = 0;
+   `uvm_component_param_utils(uvmf_out_of_order_race_scoreboard #(T,BASE_T))
 
    // FUNCTION: new
    function new(string name, uvm_component parent );
       super.new(name, parent);
    endfunction : new
-
-   // FUNCTION: build
-   // Construct the analysis fifo and non-blocking get port
-   function void build_phase(uvm_phase phase);
-      super.build_phase(phase);
-   endfunction
  
-   // FUNCTION: 
-   // Used to flush all entries in the scoreboard
-   virtual function void flush_scoreboard();
-      expected_hash.delete;
-   endfunction
-
-   // FUNCTION: 
-   // Used to remove an entry from the scoareboard
-   virtual function void remove_entry(int unsigned key=0);
-      expected_hash.delete(key);
-   endfunction
-
    // FUNCTION: write_expected
    // Transactions arrive through this interface from one or more predictors.
-   // Transactions are placed in the expected_hash for retrieval when the actual transaction arrives
+   // Transactions are either compared against a transaction with a matching key 
+   // or stored in the hash if a transaction with a matching key does not exist.
    virtual function void write_expected (input T t);
-      if (scoreboard_enabled) 
-         begin : in_write_expected
-         super.write_expected(t);
-         expected_hash[t.get_key()]=t;
-         end : in_write_expected
+     transaction_count++;
+     ->entry_received;
+     compare_or_store_entry(t);
    endfunction
 
    // FUNCTION: write_actual
    // Transactions arrive through this interface from one or more DUT output monitors.
-   // The arrival of a transaction through this interface triggers its comparison to the
-   // item in the associative array with a matching key
+   // Transactions are either compared against a transaction with a matching key 
+   // or stored in the hash if a transaction with a matching key does not exist.
    virtual function void write_actual (input T t);
+     ->entry_received;
+     compare_or_store_entry(t);
+   endfunction
+
+   virtual function void compare_or_store_entry (input T t);
       T expected_item;
       if (scoreboard_enabled) 
-         begin : in_write_actual
-         super.write_actual(t);
+         begin : in_compare_or_store_entry
          // Test if matching item exists in expected hash
          if ( expected_hash.exists(t.get_key()) ) 
             begin : item_exists_in_array
@@ -127,39 +103,10 @@ class uvmf_out_of_order_scoreboard #(type T=uvmf_transaction_base, type BASE_T =
                end : compare_failed
             end : item_exists_in_array
          else 
-            begin : no_item_exists_in_array
-            nothing_to_compare_against_count++;
-            `uvm_error("SCBD",$sformatf("NO PREDICTED ENTRY TO COMPARE AGAINST:%s",t.convert2string()))
-            end : no_item_exists_in_array
-         end : in_write_actual
-   endfunction : write_actual
-
-  // TASK: wait_for_scoreboard_drain
-  // This task is used to implement a mechanism to delay run_phase termination to allow the scoreboard time to drain.  
-  virtual task wait_for_scoreboard_drain();
-      while (expected_hash.size() != 0) 
-         begin : while_entries_remain
-         @entry_received;
-         end : while_entries_remain
-  endtask
+            begin : no_item_exists_in_array_add_item_to_array
+               expected_hash[t.get_key()]=t;
+            end : no_item_exists_in_array_add_item_to_array
+         end : in_compare_or_store_entry
+   endfunction : compare_or_store_entry
   
-   // FUNCTION: check_phase
-   // Check for fifo empty at end of test if configured to do so
-   virtual function void check_phase( uvm_phase phase);
-      T expected_item;
-      int unsigned key;
-      int fifo_entry;
-      super.check_phase(phase);
-      if ( end_of_test_empty_check  && (expected_hash.size() != 0)) 
-         begin : entries_remaining
-         while ( (expected_hash.first(key) == 1) && ( fifo_entry <  max_remaining_transaction_print )) 
-            begin : print_entry
-            expected_item=expected_hash[key];
-            expected_hash.delete(key);
-            `uvm_info("SCBD",$sformatf("Entry %d:%s",fifo_entry++,expected_item.convert2string()),UVM_MEDIUM)
-            end : print_entry
-         `uvm_error("SCBD","SCOREBOARD NOT EMPTY");
-         end : entries_remaining
-   endfunction
-
-endclass : uvmf_out_of_order_scoreboard
+endclass : uvmf_out_of_order_race_scoreboard

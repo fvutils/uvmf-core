@@ -51,10 +51,11 @@ class uvmf_driver_base #(
    type CONFIG_T, 
    type BFM_BIND_T,
    type REQ, 
-   type RSP
-) extends uvm_driver#(REQ, RSP );
+   type RSP,
+   type BASE_T = uvm_driver#(REQ, RSP )
+) extends BASE_T;
 
-  typedef uvmf_driver_base #(CONFIG_T, BFM_BIND_T, REQ, RSP) uvmf_driver_base_t;
+  typedef uvmf_driver_base #(CONFIG_T, BFM_BIND_T, REQ, RSP, BASE_T) uvmf_driver_base_t;
 
   // Agent configuration class
   CONFIG_T configuration;
@@ -91,7 +92,9 @@ class uvmf_driver_base #(
      super.connect_phase(phase);
      bfm = configuration.driver_bfm;
      if (bfm == null) begin
+`ifndef XILINX_SIMULATOR
         $stacktrace;
+`endif /* XILINX_SIMULATOR */
         `uvm_fatal("DRV", $sformatf("BFM handle with interface_name %s is null",configuration.interface_name) );
      end
   `ifdef QUESTA

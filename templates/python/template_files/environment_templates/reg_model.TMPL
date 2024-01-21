@@ -135,7 +135,7 @@ package {{regModelPkg}};
 {% endif %}
 {% for sub_env in subEnvironments %}
 {% if sub_env.regModelPkg != None %}
-      {{sub_env.regBlockClass}} {{sub_env.name}}_rm;
+      {{sub_env.regBlockClass}} {{sub_env.regBlockInstance}};
 {% endif %}
 {% endfor %}
 
@@ -177,9 +177,9 @@ package {{regModelPkg}};
 
 {% for sub_env in subEnvironments %}
 {% if sub_env.regModelPkg != None %}
-         {{sub_env.name}}_rm = new("{{sub_env.name}}_rm");
-         {{sub_env.name}}_rm.build();
-         add_block({{sub_env.name}}_rm);
+         {{sub_env.regBlockInstance}} = new("{{sub_env.regBlockInstance}}");
+         {{sub_env.regBlockInstance}}.build();
+         add_block({{sub_env.regBlockInstance}});
 {% endif %}
 {% endfor %}
  

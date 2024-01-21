@@ -4,6 +4,7 @@ import time
 import re
 from uvmf_gen import UserError
 import yaml
+import pprint
 from uvmf_yaml import dumper, RegenValidator
 
 from voluptuous import Invalid,MultipleInvalid
@@ -50,7 +51,7 @@ class Merge(Base):
     self.quiet = quiet
     self.new_directories = []
     self.yaml_imported = False
-
+    self.block_copied = False
 
   def load_yaml(self,fname):
     self.yaml_imported = True
@@ -205,8 +206,8 @@ class Parse(Base):
   def dump(self,fname):
     # Clean up data so it'll represent in YAML properly. Remove whitespace at end of lines
     # and all but the final newline. Only do this if we're dumping YAML (cleanup==True)
-    for f,labels in self.data.iteritems():
-      for label,ldata in labels.iteritems():
+    for f,labels in self.data.items():
+      for label,ldata in labels.items():
         c = ldata['content']
         if (self.cleanup):
           c = re.sub(r"\s+$", "", c)

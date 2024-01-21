@@ -50,8 +50,9 @@
 
 virtual class uvmf_parameterized_agent_configuration_base #( 
    type DRIVER_BFM_BIND_T,
-   type MONITOR_BFM_BIND_T
-) extends uvm_object;
+   type MONITOR_BFM_BIND_T,
+   type BASE_T = uvm_object
+) extends BASE_T;
 
   // VARIABLE: driver_bfm
   // VARIABLE: monitor_bfm
@@ -136,15 +137,17 @@ virtual class uvmf_parameterized_agent_configuration_base #(
       // Checking the config_db
       void'(uvm_config_db #(uvm_bitstream_t)::get(null,interface_name,"enable_transaction_viewing",enable_transaction_viewing));
     if( !uvm_config_db #( MONITOR_BFM_BIND_T )::get( null , UVMF_VIRTUAL_INTERFACES , interface_name , monitor_bfm ) ) begin
-   `ifndef XILINX_SIMULATOR
+`ifndef XILINX_SIMULATOR
             $stacktrace;
-   `endif
+`endif /* XILINX_SIMULATOR */
             `uvm_fatal("CFG" , $sformatf("uvm_config_db #( MONITOR_BFM_BIND_T )::get cannot find monitor bfm resource with interface_name %s",interface_name) )
        end
 
     if ( activity == ACTIVE ) begin
        if( !uvm_config_db #( DRIVER_BFM_BIND_T )::get( null , UVMF_VIRTUAL_INTERFACES , interface_name , driver_bfm ) ) begin
+`ifndef XILINX_SIMULATOR
             $stacktrace;
+`endif /* XILINX_SIMULATOR */
             `uvm_fatal("CFG" , $sformatf("uvm_config_db #( DRIVER_BFM_BIND_T )::get cannot find driver bfm resource with interface_name %s",interface_name) )
        end
     end

@@ -42,6 +42,22 @@ import {{name}}_pkg::*;
   // The pragma below and additional ones in-lined further down are for running this BFM on Veloce
   // pragma attribute {{name}}_monitor_bfm partition_interface_xif                                  
 {% endif %}
+
+`ifndef XRTL
+// This code is to aid in debugging parameter mismatches between the BFM and its corresponding agent.
+// Enable this debug by setting UVM_VERBOSITY to UVM_DEBUG
+// Setting UVM_VERBOSITY to UVM_DEBUG causes all BFM's and all agents to display their parameter settings.
+// All of the messages from this feature have a UVM messaging id value of "CFG"
+// The transcript or run.log can be parsed to ensure BFM parameter settings match its corresponding agents parameter settings.
+import uvm_pkg::*;
+`include "uvm_macros.svh"
+initial begin : bfm_vs_agent_parameter_debug
+  `uvm_info("CFG", 
+      $sformatf("The BFM at '%m' has the following parameters: {% for param in paramDefs %}{{param.name}}=%x {% endfor %}", {% for param in paramDefs %}{{param.name}}{% if not loop.last %},{% endif %}{% endfor %}),
+      UVM_DEBUG)
+end
+`endif
+
 {% if useDpiLink %}
   import "DPI-C" context function void C_{{name}}_notify_transaction( input c_bit_array_t bit_vec_in);
   export "DPI-C" function configure;
@@ -68,7 +84,7 @@ import {{name}}_pkg::*;
   // Custom configuration variables.  
   // These are set using the configure function which is called during the UVM connect_phase
 {% for config in configVars %}
-  {{config.type}} {{config.name}};
+  {{config.type}} {{config.name}} {{config.unpackedDim}};
 {% endfor %}
 
   tri {{clock}}_i;
@@ -100,7 +116,7 @@ import {{name}}_pkg::*;
   // ****************************************************************************              
   task do_wait_for_reset(); 
   // pragma uvmf custom reset_condition begin
-    wait ( {{reset}}_i == {% if resetAssertionLevel %}0{% else %}1{% endif %} ) ;                                                              
+    wait ( {{reset}}_i === {% if resetAssertionLevel %}0{% else %}1{% endif %} ) ;                                                              
     @(posedge {{clock}}_i) ;                                                                    
   // pragma uvmf custom reset_condition end                                                                
   endtask    
@@ -200,7 +216,7 @@ import {{name}}_pkg::*;
     //
     // Reference code;
     //    How to wait for signal value
-    //      while (control_signal == 1'b1) @(posedge {{clock}}_i);
+    //      while (control_signal === 1'b1) @(posedge {{clock}}_i);
     //    
     //    How to assign a struct member, named xyz, from a signal.   
     //    All available input signals listed.
@@ -217,7 +233,7 @@ import {{name}}_pkg::*;
     //
     // Reference code;
     //    How to wait for signal value
-    //      while (control_signal == 1'b1) @(posedge {{clock}}_i);
+    //      while (control_signal === 1'b1) @(posedge {{clock}}_i);
     //    
     //    How to assign a transaction variable, named xyz, from a signal.   
     //    All available input signals listed.
@@ -233,10 +249,16 @@ import {{name}}_pkg::*;
     // task should return when a complete transfer has been observed.  Once this task is
     // exited with captured values, it is then called again to wait for and observe 
     // the next transfer. One clock cycle is consumed between calls to do_monitor.
+{% if not veloceReady %}
+    monitored_trans.start_time = $time;
+{% endif %}
     @(posedge {{clock}}_i);
     @(posedge {{clock}}_i);
     @(posedge {{clock}}_i);
     @(posedge {{clock}}_i);
+{% if not veloceReady %}
+    monitored_trans.end_time = $time;
+{% endif %}
     // pragma uvmf custom do_monitor end
   endtask         
   

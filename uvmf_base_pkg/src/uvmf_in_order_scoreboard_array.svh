@@ -41,13 +41,18 @@
 //                 Must be derived from uvmf_transaction_base.
 //   ARRAY_DEPTH - Specifies the number of expected transaction fifos.
 
-class uvmf_in_order_scoreboard_array #(type T = uvmf_transaction_base, int ARRAY_DEPTH = 1) extends uvmf_scoreboard_base#(T);
+class uvmf_in_order_scoreboard_array #(type T = uvmf_transaction_base, int ARRAY_DEPTH = 1, type BASE_T = uvmf_scoreboard_base#(T)) extends BASE_T;
 
-  `uvm_component_param_utils( uvmf_in_order_scoreboard_array #(T, ARRAY_DEPTH))
+  `uvm_component_param_utils( uvmf_in_order_scoreboard_array #(T, ARRAY_DEPTH,BASE_T))
 
    // Analysis fifo to queue up expected transactions.  This is required because of DUT latency.
    typedef T expected_results_q_t[$];
    expected_results_q_t expected_results_q[ARRAY_DEPTH];
+
+   // Local data members for debug
+   T last_actual;
+   T last_expected;
+   bit last_mismatched = 0;
 
    // FUNCTION: new
    function new(string name, uvm_component parent );
@@ -127,15 +132,19 @@ class uvmf_in_order_scoreboard_array #(type T = uvmf_transaction_base, int ARRAY
                   return;
                 end : comparison_disabled
             // Compare actual transaction to expected transaction
+            last_expected = expected_transaction;
+            last_actual = t;
             if (t.compare(expected_transaction)) 
                begin : compare_passed
                match_count++;
                `uvm_info("SCBD",compare_message("MATCH! - ",expected_transaction,t),UVM_MEDIUM)
+               last_mismatched = 0;
                end : compare_passed
             else 
                begin : compare_failed
                mismatch_count++;
                `uvm_error("SCBD",compare_message("MISMATCH! - ",expected_transaction,t))
+               last_mismatched = 1;
                end : compare_failed
             end : item_exists_in_selected_q
             end : in_write_actual

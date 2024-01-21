@@ -31,9 +31,9 @@
 // This class is used as the configuration base class for the uvmf 
 // environment class.
 //
-class uvmf_environment_configuration_base extends uvm_object;
+class uvmf_environment_configuration_base #(type BASE_T = uvm_object) extends BASE_T;
 
-  `uvm_object_utils( uvmf_environment_configuration_base )
+  `uvm_object_param_utils( uvmf_environment_configuration_base #(BASE_T) )
 
   // BIT: enable_reg_prediction
   // If set: UVM register model prediction is enabled.  Reg adapter

@@ -25,13 +25,6 @@ class test_top extends uvmf_test_base #(.CONFIG_T({{env_name}}_env_configuration
 
   `uvm_component_utils( test_top );
 
-{% if qvip_bfm_pkgs|length > 0 %}
-// This message handler can be used to redirect QVIP Memeory Model messages through
-// the UVM messaging mecahanism.  How to enable and use it is described in 
-//      $UVMF_HOME/common/utility_packages/qvip_utils_pkg/src/qvip_report_catcher.svh
-qvip_memory_message_handler message_handler;
-{% endif %}
-
 {% if useCoEmuClkRstGen %}
   //variable: clk_ctrl
   //Clock Proxy Object used to control the Clock
@@ -64,6 +57,14 @@ uvmf_active_passive_t interface_activities[] = {
 {% endif %}
 {% endfor %}
   };
+
+{% if bench_plusargs|length > 0 %}
+  // Bench-level plusarg variables
+{% for plusarg in bench_plusargs %}{% if plusarg.var_type is defined %}
+  {{plusarg.var_type}} {{plusarg.name}}{% if plusarg.default_value is defined %} = {{plusarg.default_value}}{% endif %};{% else %}
+  bit {{plusarg.name}};{% endif %}
+
+{% endfor %}{% endif %}
 
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end
@@ -122,7 +123,23 @@ uvmf_active_passive_t interface_activities[] = {
   // executed which builds the agents.
   //
   virtual function void build_phase(uvm_phase phase);
+// pragma uvmf custom build_phase_pre_super begin
+// pragma uvmf custom build_phase_pre_super end
     super.build_phase(phase);
+{% if bench_plusargs|length > 0 %}
+    // Test for plusargs
+{% for plusarg in bench_plusargs %}
+{% if plusarg.plusarg_type is defined %}    if ($value$plusargs("{{plusarg.name}}={{plusarg.plusarg_type}}", {{plusarg.name}})) begin
+      `uvm_info("CFG",$sformatf("Detected plusarg +{{plusarg.name}} with value \"{{plusarg.plusarg_type}}\"",{{plusarg.name}}),UVM_MEDIUM)
+    end
+{% else %}    if ($test$plusargs("{{plusarg.name}}")) begin
+      `uvm_info("CFG","Detected plusarg +{{plusarg.name}}",UVM_MEDIUM);
+      {{plusarg.name}} = 1'b1;
+    end else begin
+      {{plusarg.name}} = 1'b0;
+    end
+{% endif %}{% if plusarg.env_config is defined %}    configuration.{{plusarg.env_config}} = {{plusarg.name}};
+{% endif %}{% endfor %}{% endif %}
     // pragma uvmf custom configuration_settings_post_randomize begin
     // pragma uvmf custom configuration_settings_post_randomize end
     configuration.initialize(NA, "uvm_test_top.environment", interface_names, null, interface_activities);

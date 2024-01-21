@@ -22,18 +22,37 @@
 //                   Mentor Graphics Inc
 //----------------------------------------------------------------------
 // Project         : UVM Framework
-// Unit            : Sequence base
-// File            : uvmf_sequence_base.svh
+// Unit            : Virtual sequencer base
+// File            : uvmf_virtual_sequencer_base.svh
 //----------------------------------------------------------------------
-// Creation Date   : 05.12.2011
+// Creation Date   : 06.21.2022
 //----------------------------------------------------------------------
-// Description: This file contains the uvmf extension to the uvm sequence.
+// Description: This file contains the uvmf extension to the uvm sequencer
+// for virtual sequencers.  An instance of this virtual sequencer, 
+// parameterized with the environment configuration class type, is placed
+// in the environment.  A handle to the virtual sequencer is placed in
+// the environments configuration object.  A handle to each sequencer in 
+// and under the environment, and any sub-environments, is available 
+// through the configuration hiarchy.  This is because each agent configuration
+// has a handle to the agent's sequencer.
 //
 //----------------------------------------------------------------------
-class uvmf_sequence_base #(type REQ, type RSP=REQ, type BASE_T = uvm_sequence #(REQ, RSP) ) extends BASE_T;
+class uvmf_virtual_sequencer_base #(type CONFIG_T, type BASE_T = uvm_sequencer #(.REQ(uvm_sequence_item), .RSP(uvm_sequence_item)) ) extends BASE_T;
 
-  function new( string name ="");
-    super.new( name );
+  `uvm_component_param_utils( uvmf_virtual_sequencer_base #(CONFIG_T, BASE_T))
+
+  CONFIG_T            configuration;
+
+  function new( string name ="", uvm_component parent = null );
+    super.new( name, parent );
   endfunction
 
-endclass
+  virtual function CONFIG_T get_config();
+    return configuration;
+  endfunction : get_config
+
+  virtual function void set_config(CONFIG_T configuration);
+    this.configuration = configuration;
+  endfunction : set_config
+
+endclass : uvmf_virtual_sequencer_base

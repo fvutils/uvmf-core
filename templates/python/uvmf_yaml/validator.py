@@ -20,8 +20,8 @@ class BaseValidator(object):
       Required('sv_return_type'): str,
       Required('c_return_type'): str,
       Required('name'): str,
-      Required('c_args'): str,
-      Required('sv_args'): [ self.dpiArgumentSchema ]
+      Optional('c_args'): str,
+      Optional('sv_args'): [ self.dpiArgumentSchema ]
     }
     self.dpiDefSchema = {
       Required('name'): str ,
@@ -36,6 +36,7 @@ class BaseValidator(object):
       Required('type'): str,
       Optional('value'): str,
       Optional('isrand'): Any("True","False"),
+      Optional('unpacked_dimension'): str,
       Optional('comment'): str
     }
     self.constraintSchema = {
@@ -102,6 +103,7 @@ class GlobalValidator(BaseValidator):
       Optional('interface_location'): str,
       Optional('environment_location'): str,
       Optional('bench_location'): str,
+      Optional('elaborate_bfm_parameters'): Any('True','False'),
     }
     self.schema = Schema(mainSchema)
 
@@ -120,12 +122,19 @@ class BenchValidator(BaseValidator):
       Required('bfm_name'): str,
       Required('value'): [ self.parameterUseSchema ]
     }
+    plusargSchema = {
+      Required('name'): str,
+      Optional('default_value'): str,
+      Optional('var_type'): str,
+      Optional('plusarg_type'): str,
+      Optional('env_config'): str,
+    }
     mainSchema = {
       Required('top_env'): str,
       Optional('veloce_ready'): Any('True','False'),
       Optional('existing_library_component'): Any('True','False'),
       Optional('catapult_ready'): Any('True','False'),
-      Optional('infact_enabled'): Any('True','False'),
+      Optional('infact_enabled'): 'False',
       Optional('mtlb_ready'): Any('True','False'),
       Optional('clock_half_period'): str,
       Optional('use_coemu_clk_rst_gen'): Any('True','False'),
@@ -134,12 +143,14 @@ class BenchValidator(BaseValidator):
       Optional('use_dpi_link'): str,
       Optional('reset_duration'): str,
       Optional('active_passive'): [ activePassiveSchema ],
+      Optional('active_passive_default'): Any('ACTIVE','PASSIVE'),
       Optional('parameters'): [ self.parameterDefSchema ],
       Optional('top_env_params'):  [ self.parameterUseSchema ],
       Optional('interface_params'): [ interfaceParamSchema ],
       Optional('imports'): [ self.importSchema ],
       Optional('additional_tops'): [ str ],
       Optional('use_bcr'): Any('True','False'),
+      Optional('bench_plusargs'): [plusargSchema ],
     }
     self.schema = Schema(mainSchema)
 
@@ -173,9 +184,8 @@ class QVIPEnvValidator(BaseValidator):
 
   def initializeSchema(self):
     apInfoSchema = {
-      Required('port_name'): str,
-      Required('key'): str,
-      Required('type'): str
+      Required('name'): str,
+      Required('transaction'): str
     }
     directoryVariableSchema = {
       Required('name'): str,
@@ -183,17 +193,19 @@ class QVIPEnvValidator(BaseValidator):
     }
     agentsSchema = {
       Required('name'): str,
-      Optional('active_passive'): Any("ACTIVE","PASSIVE"),
-      Optional('initial_sequence'): str,
+      Optional('type'): Any("qvip","icvip"),
       Optional('imports'): [ str ],
-      Optional('ap_info'): [ apInfoSchema ],
+      Optional('sequencer'): str,
+      Optional('analysis_ports'): [ apInfoSchema ],
       Optional('emulation_vip_libs'): [ str ],
-      Optional('directory_variables'): [ directoryVariableSchema ]
+      Optional('directory_variables'): [ directoryVariableSchema ],
+      Optional('active_passive'): Any("ACTIVE","PASSIVE"),
+      Optional('initial_sequence'): str
+
 
     }
     mainSchema = {
       Required('agents'): [ agentsSchema ],
-      Optional('type'): Any("qvip","cvip"),
       Optional('location'): str
     }
     self.schema = Schema(mainSchema)
@@ -221,6 +233,7 @@ class EnvironmentValidator(BaseValidator):
     regModelMapSchema = {
       Required('name'): str,
       Required('interface'): str,
+      Optional('interface_type'): Any("uvmf","qvip","other"),
       Optional('qvip_agent'): Any("True","False")
     }
     regModelSchema = {
@@ -228,7 +241,8 @@ class EnvironmentValidator(BaseValidator):
       Optional('use_explicit_prediction'): Any("True","False"),
       Optional('maps'): [ regModelMapSchema ],
       Optional('reg_model_package'): str,
-      Optional('reg_block_class'): str
+      Optional('reg_block_class'): str,
+      Optional('reg_adapter_class'): str
     }
     scoreboardSchema = {
       Required('name'): str,
@@ -252,7 +266,8 @@ class EnvironmentValidator(BaseValidator):
       Required('type'): str,
       Optional('extdef'): Any('True','False'),
       Optional('parameters'): [ self.parameterUseSchema ],
-      Optional('use_register_model'): Any("True","False")
+      Optional('use_register_model'): Any("True","False"),
+      Optional('reg_block_instance_name'): str
     }
     qvipSubenvSchema = {
       Required('name'): str,
@@ -268,7 +283,8 @@ class EnvironmentValidator(BaseValidator):
     nonUvmfComponentSchema = {
       Required('name'): str,
       Required('type'): str,
-      Optional('parameters'): [ self.parameterUseSchema ]
+      Optional('parameters'): [ self.parameterUseSchema ],
+      Optional('extdef'): Any('True','False')
     }
     qvipMemoryAgentComponentSchema = {
       Required('name'): str,
@@ -352,12 +368,12 @@ class InterfaceValidator(BaseValidator):
       Optional('ports'): [ portSchema ],
       Optional('transaction_vars'): [ transactionSchema ],
       Optional('transaction_constraints'): [ self.constraintSchema ],
+      Optional('response_info'): responseSchema,
       Optional('config_vars'): [ self.configVarSchema ],
       Optional('config_constraints'): [ self.constraintSchema ],
-      Optional('response_info'): responseSchema,
       Optional('imports'): [ self.importSchema ],
       Optional('veloce_ready'): Any("True","False"),
-      Optional('infact_ready'): Any("True","False"),
+      Optional('infact_ready'): 'False',
       Optional('dpi_define'): self.dpiDefSchema,
       Optional('enable_functional_coverage'): Any("True","False"),
     }

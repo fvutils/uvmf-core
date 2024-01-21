@@ -35,6 +35,9 @@ package {{name}}_sequences_pkg;
   import {{qvip_configurator_pkgs}}_params_pkg::*;
 {% endfor %}
 {% endif %}
+{% for icvip_vip_pkg in vip_packages %}
+  import {{icvip_vip_pkg}}::*;
+{% endfor %}
 {% if useCoEmuClkRstGen %}
   import clock_pkg::*;
   import reset_pkg::*;
@@ -43,6 +46,8 @@ package {{name}}_sequences_pkg;
   import {{regModelPkg}}::*;
 {% endif %}
   `include "uvm_macros.svh"
+
+
 
   // pragma uvmf custom package_imports_additional begin
   // pragma uvmf custom package_imports_additional end

@@ -30,7 +30,7 @@
 {% block contents %}
 
 
-class {{name}} {{macro.paramDeclare(parameters)|indent(2)}} extends uvm_component;
+class {{name}} {{macro.paramDeclare(parameters)|indent(2)}} extends BASE_T;
 
   // Factory registration of this class
 {{macro.compUtils(name,parameters)}}
@@ -67,6 +67,9 @@ class {{name}} {{macro.paramDeclare(parameters)|indent(2)}} extends uvm_componen
   // {{port.name}}.write({{port.name}}_output_transaction);
 {% endfor %}
 
+  // pragma uvmf custom class_item_additional begin
+  // pragma uvmf custom class_item_additional end
+
 // ****************************************************************************
   // UVMF_CHANGE_ME : Add coverage bins, crosses, exclusions, etc. according to coverage needs.
   covergroup {{name}}_cg;
@@ -76,14 +79,15 @@ class {{name}} {{macro.paramDeclare(parameters)|indent(2)}} extends uvm_componen
     // pragma uvmf custom covergroup end
   endgroup
 
-  // pragma uvmf custom class_item_additional begin
-  // pragma uvmf custom class_item_additional end
 
 // ****************************************************************************
   // FUNCTION: new
   function new(string name, uvm_component parent);
      super.new(name,parent);
     {{name}}_cg=new;
+    `uvm_warning("COVERAGE_MODEL_REVIEW", "A covergroup has been constructed which may need review because of either generation or re-generation with merging.  Remove this warning after the covergroup has been reviewed.")
+  // pragma uvmf custom new begin
+  // pragma uvmf custom new end
   endfunction
 
 // ****************************************************************************
@@ -101,6 +105,8 @@ class {{name}} {{macro.paramDeclare(parameters)|indent(2)}} extends uvm_componen
 {% for export in qvip_exports %}
     {{export.name}} = new("{{export.name}}", this);
 {% endfor %}
+  // pragma uvmf custom build_phase begin
+  // pragma uvmf custom build_phase end
   endfunction
 
 {% for export in exports %}

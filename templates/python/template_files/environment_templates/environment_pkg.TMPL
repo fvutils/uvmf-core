@@ -39,7 +39,6 @@ package {{name}}_env_pkg;
 {% endfor %}
 {% if qvipSubEnvironments|length > 0 %}
 {% if qvipMemoryAgents|length > 0 %}
-  import qvip_utils_pkg::*;
 {% endif %}
 {% endif %}
 {% for sub_env in qvipSubEnvironments %}

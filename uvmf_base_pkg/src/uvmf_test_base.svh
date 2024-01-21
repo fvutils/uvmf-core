@@ -46,10 +46,11 @@
 class uvmf_test_base #(
    type CONFIG_T,
    type ENV_T,
-   type TOP_LEVEL_SEQ_T
-) extends uvm_test;
+   type TOP_LEVEL_SEQ_T,
+   type BASE_T = uvm_test
+) extends BASE_T;
 
-  `uvm_component_param_utils( uvmf_test_base #(CONFIG_T, ENV_T, TOP_LEVEL_SEQ_T))
+  `uvm_component_param_utils( uvmf_test_base #(CONFIG_T, ENV_T, TOP_LEVEL_SEQ_T, BASE_T))
 
   // Instantiate the top level configuration, environment and sequence.
   CONFIG_T        configuration;
@@ -77,7 +78,7 @@ class uvmf_test_base #(
 
   // FUNCTION: build_phase
   virtual function void build_phase(uvm_phase phase);
-
+    super.build_phase(phase);
     // Get test name from UVM_TESTNAME command line argument
     if(!$value$plusargs("UVM_TESTNAME=%s", test_name))
       `uvm_error("TEST", {"Unknown Test name", test_name})

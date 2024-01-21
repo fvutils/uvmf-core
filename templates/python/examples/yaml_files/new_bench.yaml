@@ -23,7 +23,12 @@ uvmf:
 #        value: "20"
 #      top_env_params:
 #        - name: "ENV_PARAMETER" 
-#          value: "TEST_PARAMETER"   
+#          value: "TEST_PARAMETER"  
+#      active_passive_default: "ACTIVE or PASSIVE" 
+       ## For active_passive and interface_params, the bfm_name field must 
+       ## include the full UVM environment hierarchy down to the agent.
+       ## Underscores, _'s, must be used instead of dots, .'s, for delimiting
+       ## environment hierarchy.
 #      active_passive:   
 #        - bfm_name: "agent_name"
 #          value: "PASSIVE"

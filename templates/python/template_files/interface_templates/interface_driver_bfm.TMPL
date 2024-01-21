@@ -66,6 +66,22 @@ import {{name}}_pkg::*;
   // The following pragma and additional ones in-lined further below are for running this BFM on Veloce
   // pragma attribute {{name}}_driver_bfm partition_interface_xif
 {% endif %}
+
+`ifndef XRTL
+// This code is to aid in debugging parameter mismatches between the BFM and its corresponding agent.
+// Enable this debug by setting UVM_VERBOSITY to UVM_DEBUG
+// Setting UVM_VERBOSITY to UVM_DEBUG causes all BFM's and all agents to display their parameter settings.
+// All of the messages from this feature have a UVM messaging id value of "CFG"
+// The transcript or run.log can be parsed to ensure BFM parameter settings match its corresponding agents parameter settings.
+import uvm_pkg::*;
+`include "uvm_macros.svh"
+initial begin : bfm_vs_agent_parameter_debug
+  `uvm_info("CFG", 
+      $sformatf("The BFM at '%m' has the following parameters: {% for param in paramDefs %}{{param.name}}=%x {% endfor %}", {% for param in paramDefs %}{{param.name}}{% if not loop.last %},{% endif %}{% endfor %}),
+      UVM_DEBUG)
+end
+`endif
+
 {%if useDpiLink %}
   export "DPI-C" function configure;
   export "DPI-C" task     bfm_access; 
@@ -77,7 +93,7 @@ import {{name}}_pkg::*;
   // Custom configuration variables.  
   // These are set using the configure function which is called during the UVM connect_phase
 {% for config in configVars %}
-  {{config.type}} {{config.name}};
+  {{config.type}} {{config.name}} {{config.unpackedDim}};
 {% endfor %}
 
   tri {{clock}}_i;
@@ -250,14 +266,24 @@ import {{name}}_pkg::*;
        //      while (control_signal == 1'b1) @(posedge {{clock}}_i);
        //    
        //    How to assign a responder struct member, named xyz, from a signal.   
-       //    All available input signals listed.
-{% for sig in sigs %}
+       //    All available initiator input and inout signals listed.
+       //    Initiator input signals
+{% for sig in inputPorts %}
        //      {{name}}_responder_struct.xyz = {{sig.name}}_i;  //    {{sig.vector}} 
 {% endfor %}
-       //    How to assign a signal, named xyz, from an initiator struct member.   
-       //    All available input signals listed.
+       //    Initiator inout signals
+{% for sig in inoutPorts %}
+       //      {{name}}_responder_struct.xyz = {{sig.name}}_i;  //    {{sig.vector}} 
+{% endfor %}
+       //    How to assign a signal from an initiator struct member named xyz.   
+       //    All available initiator output and inout signals listed.
        //    Notice the _o.  Those are storage variables that allow for procedural assignment.
-{% for sig in sigs %}
+       //    Initiator output signals
+{% for sig in outputPorts %}
+       //      {{sig.name}}_o <= {{name}}_initiator_struct.xyz;  //    {{sig.vector}} 
+{% endfor %}
+       //    Initiator inout signals
+{% for sig in inoutPorts %}
        //      {{sig.name}}_o <= {{name}}_initiator_struct.xyz;  //    {{sig.vector}} 
 {% endfor %}
 {% else %}
@@ -278,14 +304,24 @@ import {{name}}_pkg::*;
        //      while (control_signal == 1'b1) @(posedge {{clock}}_i);
        //    
        //    How to assign a initiator_trans variable, named xyz, from a signal.   
-       //    All available input signals listed.
-{% for sig in sigs %}
+       //    All available initiator input and inout signals listed.
+       //    Initiator input signals:
+{% for sig in inputPorts %}
+       //      initiator_trans.xyz = {{sig.name}}_i;  //    {{sig.vector}} 
+{% endfor %}
+       //    Initiator inout signals:
+{% for sig in inoutPorts %}
        //      initiator_trans.xyz = {{sig.name}}_i;  //    {{sig.vector}} 
 {% endfor %}
        //    How to assign a signal, named xyz, from a initiator_trans varaiable.   
-       //    All available input signals listed.
+       //    All available initiator output and inout signals listed.
        //    Notice the _o.  Those are storage variables that allow for procedural assignment.
-{% for sig in sigs %}
+       //    Initiator output signals:
+{% for sig in outputPorts %}
+       //      {{sig.name}}_o <= initiator_trans.xyz;  //    {{sig.vector}} 
+{% endfor %}
+       //    Initiator inout signals:
+{% for sig in inoutPorts %}
        //      {{sig.name}}_o <= initiator_trans.xyz;  //    {{sig.vector}} 
 {% endfor %}
 {% endif %}
@@ -332,7 +368,32 @@ bit first_transfer=1;
   // Variables within the {{name}}_responder_struct:
 {% for txn in transVars %}
   //   {{txn.type}} {{txn.name}} {{txn.unpackedDim}};
-{% endfor %}        
+{% endfor %}
+       // Reference code;
+       //    How to wait for signal value
+       //      while (control_signal == 1'b1) @(posedge {{clock}}_i);
+       //    
+       //    How to assign a initiator struct member, named xyz, from a signal.   
+       //    All available responder input and inout signals listed.
+       //    Responder input signals
+{% for sig in outputPorts %}
+       //      {{name}}_initiator_struct.xyz = {{sig.name}}_i;  //    {{sig.vector}} 
+{% endfor %}
+       //    Responder inout signals
+{% for sig in inoutPorts %}
+       //      {{name}}_initiator_struct.xyz = {{sig.name}}_i;  //    {{sig.vector}} 
+{% endfor %}
+       //    How to assign a signal, named xyz, from an responder struct member.   
+       //    All available responder output and inout signals listed.
+       //    Notice the _o.  Those are storage variables that allow for procedural assignment.
+       //    Responder output signals
+{% for sig in inputPorts %}
+       //      {{sig.name}}_o <= {{name}}_responder_struct.xyz;  //    {{sig.vector}} 
+{% endfor %}
+       //    Responder inout signals
+{% for sig in inoutPorts %}
+       //      {{sig.name}}_o <= {{name}}_responder_struct.xyz;  //    {{sig.vector}} 
+{% endfor %}    
 {% else %}  
   task respond_and_wait_for_next_transfer( {{name}}_transaction 
                                          {{macro.paramList(paramDefs,"                                         ")}}
@@ -342,6 +403,32 @@ bit first_transfer=1;
 {% for txn in transVars %}
   //   {{txn.type}} {{txn.name}} {{txn.unpackedDim}};
 {% endfor %}
+       // Reference code;
+       //    How to wait for signal value
+       //      while (control_signal == 1'b1) @(posedge {{clock}}_i);
+       //    
+       //    How to assign a responder_trans member, named xyz, from a signal.   
+       //    All available responder input and inout signals listed.
+       //    Responder input signals
+{% for sig in outputPorts %}
+       //      responder_trans.xyz = {{sig.name}}_i;  //    {{sig.vector}} 
+{% endfor %}
+       //    Responder inout signals
+{% for sig in inoutPorts %}
+       //      responder_trans.xyz = {{sig.name}}_i;  //    {{sig.vector}} 
+{% endfor %}
+       //    How to assign a signal from a responder_trans member named xyz.   
+       //    All available responder output and inout signals listed.
+       //    Notice the _o.  Those are storage variables that allow for procedural assignment.
+       ///   Responder output signals
+{% for sig in inputPorts %}
+       //      {{sig.name}}_o <= responder_trans.xyz;  //    {{sig.vector}} 
+{% endfor %}
+       //    Responder inout signals
+{% for sig in inoutPorts %}
+       //      {{sig.name}}_o <= responder_trans.xyz;  //    {{sig.vector}} 
+{% endfor %}    
+
 {% endif %}
   @(posedge {{clock}}_i);
   if (!first_transfer) begin

@@ -39,6 +39,7 @@ class BenchDumper:
     data['reset_assertion_level'] = str(self.obj.resetAssertionLevel)
     data['use_dpi_link'] = str(self.obj.useDpiLink)
     data['reset_duration'] = self.obj.resetDuration
+    data['active_passive_default'] = self.obj.activePassiveDefault
     if (len(self.obj.paramDefs)):
       data['parameters'] = []
       for i in self.obj.paramDefs:
@@ -112,7 +113,7 @@ class EnvironmentDumper:
       params = []
       for p in i.parameters:
         params.append({'name':p.name,'value':p.value})
-      data['subenvs'].append({'name':i.name,'type':i.envPkg,'parameters':params})
+      data['subenvs'].append({'name':i.name,'type':i.envPkg,'parameters':params,'reg_block_instance_name':i.regBlockInstance})
     data['analysis_components'] = []
     for i in self.obj.analysisComponents:
       params = []
@@ -166,7 +167,8 @@ class EnvironmentDumper:
         data['register_model'] = { 'use_adapter': str(rm.useAdapter),
                                    'use_explicit_prediction': str(rm.useExplicitPrediction),
                                    'reg_model_package': str(rm.regModelPkg),
-                                   'reg_block_class': str(rm.regBlockClass)
+                                   'reg_block_class': str(rm.regBlockClass),
+                                   'reg_adapter_class': str(rm.adapterType)
                                  }
       else:
         match = re.match(r"(.*)",rm.sequencer)
@@ -175,7 +177,8 @@ class EnvironmentDumper:
                                    'use_explicit_prediction': str(rm.useExplicitPrediction),
                                    'reg_model_package': str(rm.regModelPkg),
                                    'reg_block_class': str(rm.regBlockClass),
-                                   'maps': [ { 'name': rm.busMap, 'interface': ifname, 'qvip_agent': str(rm.qvipAgent)} ]
+                                   'reg_adapter_class': str(rm.adapterType),
+                                   'maps': [ { 'name': rm.busMap, 'interface': ifname, 'qvip_agent': str(rm.qvipAgent), 'interface_type':str(rm.vipType)} ]
                                   }
     if self.obj.soName!="":
       data['dpi_define'] = {}
@@ -312,11 +315,6 @@ class InterfaceDumper:
     data['config_constraints'] = []
     for i in self.obj.configVarsConstraints:
       data['config_constraints'].append({'name':i.name,'value':i.type,'comment':i.comment})
-    data['response_info'] = {}
-    data['response_info']['operation'] = self.obj.responseOperation
-    data['response_info']['data'] = []
-    for i in self.obj.responseList:
-      data['response_info']['data'].append(i['name'])
     if self.obj.soName != "":
       data['dpi_define'] = {}
       data['dpi_define']['name'] = self.obj.soName

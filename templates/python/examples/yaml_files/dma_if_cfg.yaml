@@ -63,10 +63,3 @@ uvmf:
           type: "bit"                 
           isrand: "True"
           iscompare: "True"
-      # This structure defines how the interface will behave when
-      # configured as a RESPONDER (as opposed to an INITIATOR) 
-      response_info:
-        # Provide a response when the "write" port is low
-        operation : "~txn.wr"
-        # Return the 'data' field for each response
-        data : ["data"]

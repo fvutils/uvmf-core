@@ -32,8 +32,8 @@
 // revision number and notes.
 //
 // Define the major and minor UVMF release number
-`define UVMF_MAJOR_VERSION 2021
-`define UVMF_MINOR_VERSION 3
+`define UVMF_MAJOR_VERSION 2023
+`define UVMF_MINOR_VERSION 4
 `define UVMF_PATCH_VERSION ""
 
 class uvmf_version;
@@ -48,7 +48,7 @@ class uvmf_version;
     $display("----------------------------------------------------------------");
     $display("//  UVM Framework ");
     $display("//  Version %0d.%0d%s" , `UVMF_MAJOR_VERSION , `UVMF_MINOR_VERSION, `UVMF_PATCH_VERSION);
-    $display("//  (C) 2013-2021 Siemens Corporation");
+    $display("//  (C) 2013-2023 Siemens Corporation");
     $display("//  Digital Industries Software");
     $display("//  Siemens EDA");
     $display("//  All Rights Reserved.");

@@ -21,14 +21,14 @@
 # This variable points to release code that is not user modified.
 # This variable allows for UVMF release directories to reside independent of project related verification IP and project bench directories.
 # This code below looks "upward" for directory starting with UVMF_* and returns first match for use with the release examples.
-UVMF_HOME ?= ___PLEASE_SET_AN_ENVIRONMENT_VARIABLE_NAMED_UVMF_HOME_TO_POINT_TO_THE_UVMF_INSTALLATION___
+export UVMF_HOME ?= ___PLEASE_SET_AN_ENVIRONMENT_VARIABLE_NAMED_UVMF_HOME_TO_POINT_TO_THE_UVMF_INSTALLATION___
 
 # pragma uvmf custom exports begin
 #
 # Project(s) specific verification IP library:
 # Directory where reusable verification packages for interfaces, environments, utilities, etc. reside.
 # This variable allows for your verification IP to reside independent of project bench and UVMF release directories.
-# For examples deployed with UVMF this will be $(UVMF_HOME)/<example_group>/verification_ip
+# For examples deployed with UVMF this will be $(UVMF_HOME)/<example_group>/{{vip_location}}
 export UVMF_VIP_LIBRARY_HOME ?= $(PWD)/{{relative_vip_from_sim}}
 {% if vipLibEnvVariableNames|length > 0 %}
 # Include environment variables for all listed vip libraries
@@ -107,11 +107,6 @@ VRUN_ARGS += -GINFACT_ENABLED=1
 
 # Include makefile that includes targets for UVM_VIP_Library packages
 include $(UVMF_HOME)/scripts/Makefile
-
-{% if qvip_pkg_env_variables|length > 0 %}
-include $(UVMF_HOME)/common/utility_packages/qvip_utils_pkg/Makefile
-{% endif %}
-
 
 {% if useCoEmuClkRstGen %}
 include $(UVMF_HOME)/common/uvm_co_emulation_utilities/Makefile
@@ -251,11 +246,32 @@ comp_{{name}}_dut: comp_{{name}}_vhdl_dut comp_{{name}}_verilog_dut
 # pragma uvmf custom dut_compile_make_target end
 
 {% if qvip_bfm_pkgs|length > 0 %}
-comp_qvip: 
+COMP_QVIP_TGT_0 = comp_icvip_sim
+COMP_QVIP_TGT_1 = comp_icvip_emu
+COMP_QVIP_TGT = $(COMP_QVIP_TGT_$(USE_VELOCE))
+
+comp_qvip: $(COMP_QVIP_TGT)
+
 {% endif %}
+comp_icvip_sim:
+ifeq ($(USE_VTL), 1)
 {% for qvip_env_vars in qvip_pkg_env_variables %}
-	$(HVL_COMP_CMD) +define+MAP_PROT_ATTR +incdir+$(QUESTA_MVC_HOME)/questa_mvc_{{src_dir}}sv/ -f $({{qvip_env_vars}}_DIR_NAME)/{{qvip_bfm_pkgs[loop.index-1]}}_filelist.f
-	$(HVL_COMP_CMD) +define+MAP_PROT_ATTR +incdir+$({{qvip_env_vars}}_DIR_NAME) $({{qvip_env_vars}}_DIR_NAME)/hdl_{{qvip_bfm_pkgs[loop.index-1]}}.sv
+	$(HVL_COMP_CMD) +define+MAP_PROT_ATTR -f $({{qvip_env_vars}}_DIR_NAME)/{{qvip_bfm_pkgs[loop.index-1]}}_filelist_hvl.f
+	$(HVL_COMP_CMD) +define+MAP_PROT_ATTR -f $({{qvip_env_vars}}_DIR_NAME)/{{qvip_bfm_pkgs[loop.index-1]}}_filelist_emu_hdl.f
+{% endfor %}
+else
+{% for qvip_env_vars in qvip_pkg_env_variables %}
+	$(HVL_COMP_CMD) +define+MAP_PROT_ATTR +incdir+$(QUESTA_MVC_HOME)/questa_mvc_src/sv/ -f $({{qvip_env_vars}}_DIR_NAME)/{{qvip_bfm_pkgs[loop.index-1]}}_filelist.f
+	$(HVL_COMP_CMD) +define+MAP_PROT_ATTR $({{qvip_env_vars}}_DIR_NAME)/hdl_{{qvip_bfm_pkgs[loop.index-1]}}.sv
+	#$(HVL_COMP_CMD) +define+MAP_PROT_ATTR $({{qvip_env_vars}}_DIR_NAME)/hvl_{{qvip_bfm_pkgs[loop.index-1]}}.sv
+{% endfor %}
+endif
+
+comp_icvip_emu:
+{% for qvip_env_vars in qvip_pkg_env_variables %}
+	$(HVL_COMP_CMD) +define+MAP_PROT_ATTR -f $({{qvip_env_vars}}_DIR_NAME)/{{qvip_bfm_pkgs[loop.index-1]}}_filelist_emu_hdl.f
+	$(HVL_COMP_CMD) +define+MAP_PROT_ATTR -f $({{qvip_env_vars}}_DIR_NAME)/{{qvip_bfm_pkgs[loop.index-1]}}_filelist_hvl.f
+	$(HDL_COMP_CMD) +define+MAP_PROT_ATTR -f $({{qvip_env_vars}}_DIR_NAME)/{{qvip_bfm_pkgs[loop.index-1]}}_filelist_emu_hdl.f
 {% endfor %}
 
 BUILD_TGT_0 = make_build
@@ -326,7 +342,7 @@ sv_lib.so:	{% for bfm in bfm_pkgs %}{{bfm}}_tc.o {% endfor %} uvmf_tc.o dpi_link
 	${GPP}  uvmf_tc.o {% for bfm in bfm_pkgs %}{{bfm}}_tc.o {% endfor %} dpi_link.o -shared -o sv_lib.so 
 {% endif %}
 
-comp_hvl_core : {% if qvip_bfm_pkgs|length > 0 %} comp_qvip comp_qvip_utils_pkg {% endif %} {% if useCoEmuClkRstGen %} comp_co_emulation_clock_pkg comp_co_emulation_reset_pkg comp_co_emulation_memload_pkg {% endif %} \
+comp_hvl_core : {% if qvip_bfm_pkgs|length > 0 %} comp_qvip {% endif %} {% if useCoEmuClkRstGen %} comp_co_emulation_clock_pkg comp_co_emulation_reset_pkg comp_co_emulation_memload_pkg {% endif %} \
 	{% for bfm in bfm_pkgs %} comp_{{bfm}}_pkg {% endfor %} \
 	comp_{{env_name}}_env_pkg \
 	comp_{{name}}_parameters_pkg comp_{{name}}_sequence_pkg comp_{{name}}_tests_pkg 
@@ -346,6 +362,8 @@ vinfo_build:{% if qvip_bfm_pkgs|length > 0 %} comp_qvip {% endif %} comp_{{name}
 	$(VEL_COMP)
 
 build: $(BUILD_TGT)
+
+emu_build: libs build link optimize
 
 {% if inFactEnabled %}
 clean::

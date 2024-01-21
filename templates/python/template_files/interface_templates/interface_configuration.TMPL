@@ -21,7 +21,7 @@ class {{name}}_configuration {{macro.paramDeclare(paramDefs)|indent(6)}} extends
 {% for config in configVars %}
 {% if config.comment|length > 0 %}  // {{config.comment}}
 {% endif %}
-  {% if config.isrand %}rand {% endif %}{{config.type}} {{config.name}}{% if config.value != '' %} = {{config.value}}{% endif %};
+  {% if config.isrand %}rand {% endif %}{{config.type}} {{config.name}}{% if config.unpackedDim != '' %} {{config.unpackedDim}}{% endif %}{% if config.value != '' %} = {{config.value}}{% endif %};
 {% endfor %}
 
   // Sequencer handle populated by agent
@@ -41,7 +41,7 @@ class {{name}}_configuration {{macro.paramDeclare(paramDefs)|indent(6)}} extends
     // pragma uvmf custom covergroup begin
     option.auto_bin_max=1024;
 {% for config in configVars %}
-    coverpoint {{config.name}};
+{% if config.unpackedDim != '' %}//{% endif %}    coverpoint {{config.name}};
 {% endfor %}
     // pragma uvmf custom covergroup end
   endgroup
@@ -145,6 +145,15 @@ class {{name}}_configuration {{macro.paramDeclare(paramDefs)|indent(6)}} extends
 
     {{name}}_configuration_cg.set_inst_name($sformatf("{{name}}_configuration_cg_%s",get_full_name()));
 
+// This code is to aid in debugging parameter mismatches between the BFM and its corresponding agent.
+// Enable this debug by setting UVM_VERBOSITY to UVM_DEBUG
+// Setting UVM_VERBOSITY to UVM_DEBUG causes all BFM's and all agents to display their parameter settings.
+// All of the messages from this feature have a UVM messaging id value of "CFG"
+// The transcript or run.log can be parsed to ensure BFM parameter settings match its corresponding agents parameter settings.
+    `uvm_info("CFG", 
+              $sformatf("The agent at '%s' is using interface named %s has the following parameters: {% for param in paramDefs %}{{param.name}}=%x {% endfor %}", agent_path, interface_name, {% for param in paramDefs %}{{param.name}} {% if not loop.last %},{% endif %}{% endfor %}),
+              UVM_DEBUG)
+
     // pragma uvmf custom initialize begin
     // This controls whether or not the agent returns a transaction handle in the driver when calling 
     // item_done() back into the sequencer or not. If set to 1, a transaction is sent back which means
@@ -178,7 +187,7 @@ class {{name}}_configuration {{macro.paramDeclare(paramDefs)|indent(6)}} extends
   // 
   virtual function string convert2string ();
     // pragma uvmf custom convert2string begin
-    return $sformatf("{% for config in configVars %}{{config.name}}:0x%x {% endfor %}"{% for config in configVars %},{{config.name}}{% endfor %});
+    return $sformatf("{% for config in configVars %}{{config.name}}:{%if config.unpackedDim != "" %}%p {% else %}0x%x {% endif %} {% endfor %}"{% for config in configVars %},{{config.name}}{% endfor %});
     // pragma uvmf custom convert2string end
   endfunction
 

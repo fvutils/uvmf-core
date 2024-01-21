@@ -20,6 +20,16 @@ import {{name}}_tests_pkg::*;
   // pragma uvmf custom module_item_additional begin
   // pragma uvmf custom module_item_additional end
 
+{% for qvip_hdl in qvip_hdl_modules %}
+/*
+  hvl_{{qvip_hdl.envPkg}} 
+      #(
+        .HDL_BFM_SCOPE("hdl_top.{{qvip_hdl.unique_id_with_underscores}}qvip_hdl"),
+        .HVL_AGENT_SCOPE("{{qvip_hdl.unique_id}}")
+       ) {{qvip_hdl.unique_id_with_underscores}}qvip_hvl();
+*/
+{% endfor %}
+
   initial begin
     $timeformat(-9,3,"ns",5);
     run_test();

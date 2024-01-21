@@ -49,10 +49,11 @@
 class uvmf_monitor_base #(
    type CONFIG_T, 
    type BFM_BIND_T,
-   type TRANS_T
-) extends uvm_monitor;
+   type TRANS_T,
+   type BASE_T = uvm_monitor
+) extends BASE_T;
 
-  typedef uvmf_monitor_base #(CONFIG_T, BFM_BIND_T, TRANS_T) uvmf_monitor_base_t;
+  typedef uvmf_monitor_base #(CONFIG_T, BFM_BIND_T, TRANS_T, BASE_T) uvmf_monitor_base_t;
 
   // Analysis_port used to broadcast monitored transactions
   uvm_analysis_port #(TRANS_T) monitored_ap;
@@ -93,6 +94,7 @@ class uvmf_monitor_base #(
   // FUNCTION: build_phase
   // Construct the analysis port in the build phase.
   virtual function void build_phase(uvm_phase phase);
+     super.build_phase(phase);
      monitored_ap=new( "monitored_ap", this );
   endfunction
 
@@ -105,7 +107,9 @@ class uvmf_monitor_base #(
      super.connect_phase(phase);
      bfm = configuration.monitor_bfm;
      if (bfm == null) begin
+`ifndef XILINX_SIMULATOR
         $stacktrace;
+`endif /* XILINX_SIMULATOR */
         `uvm_fatal("MON", $sformatf("BFM handle with interface_name %s is null",configuration.interface_name));
      end
   `ifdef QUESTA
@@ -118,6 +122,7 @@ class uvmf_monitor_base #(
 // ****************************************************************************
   // FUNCTION: start_of_simulation_phase
   virtual function void start_of_simulation_phase(uvm_phase phase);
+     super.start_of_simulation_phase(phase);
   `ifdef QUESTA
      if (configuration.enable_transaction_viewing) begin
        transaction_viewing_stream = $create_transaction_stream({"..",get_full_name(),".","txn_stream"},"TVM");

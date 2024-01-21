@@ -31,10 +31,6 @@ package {{name}}_tests_pkg;
 {% for agent in qvip_bfm_pkgs %}
    import {{agent}}_pkg::*;
 {% endfor %}
-{% if qvip_bfm_pkgs|length > 0 %}
-   import QUESTA_MVC::*;
-   import qvip_utils_pkg::*;
-{% endif %}
 {% for ext_import in external_imports %}
    import {{ext_import}}::*;
 {% endfor %}

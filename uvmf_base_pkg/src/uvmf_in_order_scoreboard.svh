@@ -37,12 +37,16 @@
 //       T - Specifies the type of transactions to be compared.
 //           Must be derived from uvmf_transaction_base.
 
-class uvmf_in_order_scoreboard #(type T = uvmf_transaction_base) extends uvmf_scoreboard_base#(T);
+class uvmf_in_order_scoreboard #(type T = uvmf_transaction_base, type BASE_T = uvmf_scoreboard_base#(T)) extends BASE_T;
 
-  `uvm_component_param_utils( uvmf_in_order_scoreboard #(T))
+  `uvm_component_param_utils( uvmf_in_order_scoreboard #(T,BASE_T))
 
    // queue for expected transactions. This is required because of DUT latency.
    T expected_results_q[$];
+
+   T last_expected;
+   T last_actual;
+   bit last_mismatched = 0;
 
    // FUNCTION: new - Constructor
    function new(string name, uvm_component parent );
@@ -102,14 +106,18 @@ class uvmf_in_order_scoreboard #(type T = uvmf_transaction_base) extends uvmf_sc
                   return;
                 end : comparison_disabled
                // Compare actual transaction to expected transaction
+               last_expected = expected_transaction;
+               last_actual = t;
                if (t.compare(expected_transaction)) 
                   begin : compare_pass
                   match_count++;
+                  last_mismatched = 0;
                   `uvm_info("SCBD",compare_message("MATCH! - ",expected_transaction,t),UVM_MEDIUM)
                   end : compare_pass
                else 
                   begin : compare_fail
                   mismatch_count++;
+                  last_mismatched = 1;
                   `uvm_error("SCBD",compare_message("MISMATCH! - ",expected_transaction,t))
                   end : compare_fail
             end : item_to_compare_against

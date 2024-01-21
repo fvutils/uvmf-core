@@ -14,11 +14,32 @@
 
 {% block contents %}
 
+
+typedef {{env_name}}_env_configuration {{macro.paramUseNested(envParamDefs)|indent(8)}} {{env_name}}_env_configuration_t;
+
 class {{name}}_bench_sequence_base extends uvmf_sequence_base #(uvm_sequence_item);
 
   `uvm_object_utils( {{name}}_bench_sequence_base );
 
   // pragma uvmf custom sequences begin
+
+// This example shows how to use the environment sequence base
+// It can only be used on environments generated with UVMF_2022.3 and later.
+// Environment sequences generated with UVMF_2022.1 and earlier do not have the required 
+//    environment level virtual sequencer
+// typedef {{env_name}}_env_sequence_base #(
+//         .CONFIG_T({{env_name}}_env_configuration_t){% if envParamDefs|length > 0 %}{% for param in envParamDefs -%}{% if loop.first %},
+{% endif %}
+//         .{{param.name}}({{param.value}}){% if not loop.last %},
+{% endif %}{% endfor %}
+{% endif %}
+// 
+//         )
+//         {{env_name}}_env_sequence_base_t;
+// rand {{env_name}}_env_sequence_base_t {{env_name}}_env_seq;
+
+
+
   // UVMF_CHANGE_ME : Instantiate, construct, and start sequences as needed to create stimulus scenarios.
   // Instantiate sequences here
 {% for bfm in bfms %}
@@ -48,12 +69,11 @@ class {{name}}_bench_sequence_base extends uvmf_sequence_base #(uvm_sequence_ite
 {% if qvip_bfms|length > 0 %}
   // Sequencer handles for each QVIP interface
 {% for agent in qvip_bfms %}
-  mvc_sequencer {{agent.unique_id_with_underscores}}{{agent.name}}_sqr;
+  {{agent.sequencer}} {{agent.unique_id_with_underscores}}{{agent.name}}_sqr;
 {% endfor %}
 {% endif %}
 
   // Top level environment configuration handle
-  typedef {{env_name}}_env_configuration {{macro.paramUseNested(envParamDefs)|indent(8)}} {{env_name}}_env_configuration_t;
   {{env_name}}_env_configuration_t top_configuration;
 
   // Configuration handles to access interface BFM's
@@ -62,7 +82,7 @@ class {{name}}_bench_sequence_base extends uvmf_sequence_base #(uvm_sequence_ite
 {% endfor %}
 {% if topEnvHasRegisterModel %}
   // Local handle to register model for convenience
-  {{regBlockClass}} reg_model;
+  {{regBlockClass}} {{regBlockInstance}};
   uvm_status_e status;
 {% endif %}
 {% if useCoEmuClkRstGen %}
@@ -112,13 +132,13 @@ class {{name}}_bench_sequence_base extends uvmf_sequence_base #(uvm_sequence_ite
     // Retrieve QVIP sequencer handles from the uvm_config_db
 {% for agent in qvip_bfms %}
 {% if  agent.activity == 'ACTIVE' %}
-    if( !uvm_config_db #(mvc_sequencer)::get( null,UVMF_SEQUENCERS,"{{agent.unique_id}}{{agent.name}}", {{agent.unique_id_with_underscores}}{{agent.name}}_sqr) ) 
-      `uvm_warning("CFG" , "uvm_config_db #( mvc_sequencer )::get cannot find resource {{agent.name}}" ) 
+    if( !uvm_config_db #({{agent.sequencer}})::get( null,UVMF_SEQUENCERS,"{{agent.unique_id}}{{agent.name}}", {{agent.unique_id_with_underscores}}{{agent.name}}_sqr) ) 
+      `uvm_warning("CFG" , "uvm_config_db #( {{agent.sequencer}} )::get cannot find resource {{agent.name}}" ) 
 {% endif %}
 {% endfor %}
 {% endif %}
 {% if topEnvHasRegisterModel %}
-    reg_model = top_configuration.{{env_name}}_rm;
+    {{regBlockInstance}} = top_configuration.{{regBlockInstance}};
 {% endif %}
 
 {% if useCoEmuClkRstGen %}
@@ -140,6 +160,9 @@ class {{name}}_bench_sequence_base extends uvmf_sequence_base #(uvm_sequence_ite
     // pragma uvmf custom body begin
 
     // Construct sequences here
+
+    // {{env_name}}_env_seq = {{env_name}}_env_sequence_base_t::type_id::create("{{env_name}}_env_seq");
+
 {% for bfm in bfms %}
 {% if  bfm.activity == 'ACTIVE' %}
 {% if  bfm.initResp == 'INITIATOR' %}
@@ -154,7 +177,7 @@ class {{name}}_bench_sequence_base extends uvmf_sequence_base #(uvm_sequence_ite
 {% endfor %}
     join
 {% if topEnvHasRegisterModel %}
-    reg_model.reset();
+    {{regBlockInstance}}.reset();
 {% endif %}
     // Start RESPONDER sequences here
     fork
@@ -175,6 +198,9 @@ class {{name}}_bench_sequence_base extends uvmf_sequence_base #(uvm_sequence_ite
 {% if useCoEmuClkRstGen %}
     clk_ctrl.wait_clocks(25);
 {% else %}
+
+// {{env_name}}_env_seq.start(top_configuration.vsqr);
+
     // UVMF_CHANGE_ME : Extend the simulation XXX number of clocks after 
     // the last sequence to allow for the last sequence item to flow 
     // through the design.
