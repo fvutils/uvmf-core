@@ -52,26 +52,23 @@ def setup_sim():
             "uvmf:project_benches:my_bench",
             flags={"sv-uvm": True})
         print("files: %s" % str(files), flush=True)
-        sim = HdlSim.create("xsm")
-        build_args = sim.mkBuildArgs(os.getcwd())
-        build_args.addFiles(files, {"sv-uvm": True})
-        build_args.top.add("hdl_top")
-        build_args.top.add("hvl_top")
-        sim.build(build_args)
+        sim = HdlSim.create(os.getcwd(), "mti")
+        sim.debug = True
+        sim.addFiles(files, {"sv-uvm": True})
+        sim.top.add("hdl_top")
+        sim.top.add("hvl_top")
+        sim.build()
     except Exception as e:
         print("Exception: %s" % str(e), flush=True)
         raise e
     
-    return (sim,build_args)
+    return sim
 
 def test_smoke_1(setup_sim):
 
-    sim = setup_sim[0]
-    build_args = setup_sim[1]
+    sim = setup_sim
 
-    run_args = sim.mkRunArgs(
-        build_args.builddir,
-        build_args.builddir)
+    run_args = sim.mkRunArgs(sim.builddir)
     run_args.plusargs.append("UVM_TESTNAME=test_top")
     
     sim.run(run_args)
