@@ -6,9 +6,9 @@ filesets:
   hvl:
     files:
     - "sv-uvm ? (uvmf_base_pkg_hdl.sv)":
-         include_path: "src"
+         include_path: "."
     - "sv-uvm ? (uvmf_base_pkg.sv)":
-         include_path: "src"
+         include_path: "."
     file_type: systemVerilogSource
 
 targets:
