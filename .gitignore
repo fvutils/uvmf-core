@@ -2,4 +2,4 @@
 packages/
 __pycache__/
 .eggs/
-
+*.egg-info/
