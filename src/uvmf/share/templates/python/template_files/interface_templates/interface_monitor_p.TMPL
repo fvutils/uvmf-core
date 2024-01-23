@@ -1,0 +1,114 @@
+{% set fname = "{{vip_location}}/{{interface_location}}/{{name}}_pkg/{{src_dir}}{{name}}_monitor_p.svh" %}
+{% extends "base_template.TMPL" %}
+
+{% block description %}
+//----------------------------------------------------------------------
+//     
+// DESCRIPTION: 
+//
+//----------------------------------------------------------------------
+{% endblock %}
+
+{% block contents %}
+class {{name}}_monitor_p {{macro.paramDeclare(paramDefs)|indent(6)}} extends {{name}}_monitor;
+
+{{macro.compUtils([name,'_monitor_p']|join(""),paramDefs)}}
+
+  typedef virtual {{name}}_monitor_bfm {{macro.paramUse(paramDefs)}} vif_t;
+  vif_t bfm;
+
+{% if veloceReady %}
+// Structure used to pass data from monitor BFM to monitor class in agent.
+// Use to_monitor_struct function to pack transaction variables into structure.
+// Use from_monitor_struct function to unpack transaction variables from structure.
+`{{name}}_MONITOR_STRUCT
+
+//*******************************************************************
+// FUNCTION: from_monitor_struct()
+// This function unpacks the struct provided as an argument into transaction 
+// variables of this class.
+// This function is defined in {{name}}_macros.svh
+`{{name}}_FROM_MONITOR_STRUCT_FUNCTION 
+{% endif %}
+
+  // pragma uvmf custom class_item_additional begin
+  // pragma uvmf custom class_item_additional end
+  
+// ****************************************************************************
+// This function is the standard SystemVerilog constructor.
+//
+  function new( string name = "", uvm_component parent = null );
+    super.new( name, parent );
+  endfunction
+
+// ****************************************************************************
+// This function sends configuration object variables to the monitor BFM 
+// using the configuration struct.
+//
+   virtual function void configure(input {{name}}_configuration cfg);
+{% if veloceReady %}
+      bfm.configure( cfg.to_struct() );
+{% else %}
+      bfm.configure( cfg );
+{% endif %}
+   endfunction
+
+// ****************************************************************************
+// This function places a handle to this class in the proxy variable in the
+// monitor BFM.  This allows the monitor BFM to call the notify_transaction
+// function within this class.
+//
+  virtual function void set_bfm_proxy_handle();
+    {%if useDpiLink %}bfm.{{name}}_monitor_h = this;
+    {% else %}bfm.proxy = this;
+  {% endif %}endfunction
+
+  virtual function void set_config( {{name}}_configuration configuration );
+    typedef {{name}}_param_bridge_p {{macro.paramUse(paramDefs)|indent(6)}} param_bridge_t;
+    param_bridge_t param_bridge_p;
+    super.set_config(configuration);
+    $cast(param_bridge_p, configuration.parameter_bridge);
+    // Obtain the virtual interface
+    bfm = param_bridge_p.monitor_vif;
+    bfm.proxy = this;
+  endfunction
+
+// ***************************************************************************              
+  virtual task run_phase(uvm_phase phase);                                                   
+    // Start monitor BFM thread and don't call super.run() in order to                       
+    // override the default monitor proxy 'pull' behavior with the more                      
+    // emulation-friendly BFM 'push' approach using the notify_transaction                   
+    // function below                                                                        
+    bfm.start_monitoring();                                                   
+  endtask                                                                                    
+  
+// **************************************************************************  
+{% if veloceReady %}  
+// This function is called by the monitor BFM.  It receives data observed by the
+// monitor BFM.  Data is passed using the {{name}}_monitor_struct.          
+  virtual function void notify_transaction(input {{name}}_monitor_s {{name}}_monitor_struct);
+{% else %}
+// This function is called by the monitor BFM.  It receives data observed by the
+// monitor BFM.  Data is passed using the {{name}}_transaction object handle.          
+  virtual function void notify_transaction({{name}}_transaction monitored_trans);
+{% endif %}
+{% if veloceReady %} 
+    trans = new("trans");
+    from_monitor_struct(trans, {{name}}_monitor_struct);
+{% else %}
+    trans = monitored_trans;
+{% endif %}
+{% if veloceReady %}
+    trans.start_time = time_stamp;                                                          
+    trans.end_time = $time;                                                                 
+    time_stamp = trans.end_time;
+{% endif %} 
+    analyze(trans);                                                                         
+  endfunction  
+
+endclass
+
+// pragma uvmf custom external begin
+// pragma uvmf custom external end
+
+{% endblock %}

@@ -1,0 +1,78 @@
+{% set fname = "{{vip_location}}/{{interface_location}}/{{name}}_pkg/{{src_dir}}{{name}}_param_bridge_p.svh" %}
+{% extends "base_template.TMPL" %}
+
+{% block description %}
+//----------------------------------------------------------------------
+//     
+// DESCRIPTION: 
+//
+//----------------------------------------------------------------------
+{% endblock %}
+
+{% block contents %}
+typedef class {{name}}_driver_p;
+typedef class {{name}}_monitor_p;
+
+class {{name}}_param_bridge_p {{macro.paramDeclare(paramDefs)|indent(6)}} extends {{name}}_param_bridge;
+
+  {{macro.objUtils([name,'_param_bridge_p']|join(""),paramDefs)}}
+
+    typedef virtual {{name}}_driver_bfm {{macro.paramUse(paramDefs)|indent(6)}} driver_vif_t;
+    typedef virtual {{name}}_monitor_bfm {{macro.paramUse(paramDefs)|indent(6)}} monitor_vif_t;
+    typedef {{name}}_driver_p {{macro.paramUse(paramDefs)|indent(6)}} {{name}}_driver_t;
+    typedef {{name}}_monitor_p {{macro.paramUse(paramDefs)|indent(6)}} {{name}}_monitor_t;
+
+    driver_vif_t                driver_vif;
+    monitor_vif_t               monitor_vif;
+
+    function new(string name="{{name}}");
+        super.new(name);
+    endfunction
+
+    function void register_bfms(string bfm_path);
+{% if paramDefs|length > 0 %}
+      param_vals = '{
+{% for param in paramDefs %}          {{param.name}}: {{param.name}}{% if not loop.last %},{% endif %}
+{% endfor %}
+      };
+{% endif %}
+      if (!uvm_config_db#(monitor_vif_t)::get(null, UVMF_VIRTUAL_INTERFACES, bfm_path, this.monitor_vif)) begin
+        `uvm_fatal("CFG",$sformatf("Failed config_db lookup of monitor_vif with path %s",bfm_path))
+      end
+      if (!uvm_config_db #(driver_vif_t)::get(null, UVMF_VIRTUAL_INTERFACES, bfm_path, this.driver_vif)) begin
+        active_passive = PASSIVE;
+      end else begin
+        active_passive = ACTIVE;
+      end
+      uvm_config_db #({{name}}_param_bridge)::set(null, UVMF_VIRTUAL_INTERFACES, bfm_path, this);
+    endfunction
+
+    virtual function {{name}}_driver create_driver(string name, uvm_component parent);
+        {{name}}_driver_t driver = {{name}}_driver_t::type_id::create(name, parent);
+        return driver;
+    endfunction
+
+    virtual function {{name}}_monitor create_monitor(string name, uvm_component parent);
+        {{name}}_monitor_t monitor = {{name}}_monitor_t::type_id::create(name, parent);
+        return monitor;
+    endfunction
+
+  // ****************************************************************************
+  // TASK: wait_for_reset
+  // *[Required]*  Blocks until reset is released.  The wait_for_reset operation is performed
+  // by a task in the monitor bfm.
+  virtual task wait_for_reset();
+    monitor_vif.wait_for_reset();
+  endtask
+
+  // ****************************************************************************
+  // TASK: wait_for_num_clocks
+  // *[Required]* Blocks until specified number of clocks have elapsed. The wait_for_num_clocks
+  // operation is performed by a task in the monitor bfm.
+  virtual task wait_for_num_clocks(int clocks);
+    monitor_vif.wait_for_num_clocks(clocks);
+  endtask
+
+endclass
+
+{% endblock %}

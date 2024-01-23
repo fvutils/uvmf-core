@@ -1,0 +1,26 @@
+{% set fname = "{{bench_location}}/{{name}}/tb/testbench/hvl_top.compile" %}
+{% block description %}
+{% endblock %}
+{% block contents %}
+incdir:
+# pragma uvmf custom incdir_additional begin
+# pragma uvmf custom incdir_additional end
+  - ${uvm_path}/src
+  - .
+needs:
+# pragma uvmf custom needs_additional begin
+# pragma uvmf custom needs_additional end
+{% if useCoEmuClkRstGen %}
+  - $UVMF_HOME/common/uvm_co_emulation_utilities/co_emu_hvl.compile
+{% endif %}
+{% if qvip_pkg_env_variables|length > 0 %}
+  - $UVMF_HOME/common/utility_packages/qvip_utils_pkg/qvip_utils_pkg.compile
+{% endif %}
+  - ../tests/{{name}}_tests_pkg.compile
+src:
+# pragma uvmf custom src_additional begin
+# pragma uvmf custom src_additional end
+  - hvl_top.sv
+# pragma uvmf custom compile_additional begin
+# pragma uvmf custom compile_additional end
+{% endblock %}

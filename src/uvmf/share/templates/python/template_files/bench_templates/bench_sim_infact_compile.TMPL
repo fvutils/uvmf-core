@@ -1,0 +1,14 @@
+{% set fname = "{{bench_location}}/{{name}}/sim/infact.compile" %}
+{% set conditional = "infact_enabled" %}
+{% block contents %}
+incdir:
+# pragma uvmf custom incdir_additional begin
+# pragma uvmf custom incdir_additional end
+  - ../tb/sequences
+src:
+# pragma uvmf custom src_additional begin
+# pragma uvmf custom src_additional end
+  - ../tb/sequences/{{name}}_infact_sequences_pkg.sv
+# pragma uvmf custom compile_additional begin
+# pragma uvmf custom compile_additional end
+{% endblock %}

@@ -1,0 +1,117 @@
+{% set fname = "{{bench_location}}/{{name}}/tb/testbench/hvl_top.sv" %}
+{% extends "base_template.TMPL" %}
+
+{% block description %}
+//
+//----------------------------------------------------------------------
+//                                          
+// DESCRIPTION: This module loads the test package and starts the UVM phases.
+//
+//----------------------------------------------------------------------
+{% endblock %}
+
+{% block contents %}
+
+`include "uvm_macros.svh"
+
+module hvl_top;
+
+import uvm_pkg::*;
+import {{name}}_tests_pkg::*;
+import {{name}}_parameters_pkg::*;
+{% for bfm in bfm_pkgs %}import {{bfm}}_pkg::*;
+{% endfor %}
+
+  // pragma uvmf custom module_item_additional begin
+  // pragma uvmf custom module_item_additional end
+
+  // The following variables and functions are used to facilitate
+  // HVL/HDL BFM connections
+  string uvm_hierarchy [$];
+  bit vif_registration_complete;
+  int delay_count = 0;
+
+  function string uvm_hierarchy_string();
+    string ret;
+    ret = "";
+    foreach (uvm_hierarchy[i]) begin
+      ret = $sformatf("%s.%s", ret, uvm_hierarchy[i]);
+    end
+    ret = ret.substr(1, ret.len()-1);
+    return ret;
+  endfunction
+
+  function void uvm_hierarchy_debug();
+    $display("uvm_hierarchy now %s",uvm_hierarchy_string());
+  endfunction
+
+  function void uvm_hierarchy_push(string s);
+    uvm_hierarchy.push_back(s);
+    //uvm_hierarchy_debug();
+  endfunction
+
+  function void uvm_hierarchy_pop();
+    void'(uvm_hierarchy.pop_back());
+    //uvm_hierarchy_debug();
+  endfunction
+  
+{% for qvip_hdl in qvip_hdl_modules %}
+/*
+  hvl_{{qvip_hdl.envPkg}} 
+      #(
+        .HDL_BFM_SCOPE("hdl_top.{{qvip_hdl.unique_id_with_underscores}}qvip_hdl"),
+        .HVL_AGENT_SCOPE("{{qvip_hdl.unique_id}}")
+       ) {{qvip_hdl.unique_id_with_underscores}}qvip_hvl();
+*/
+{% endfor %}
+
+  initial begin
+
+    while (!uvm_config_db#(bit)::get(null,"","vif_registration_complete",vif_registration_complete)) begin
+      if (delay_count++ > 10) begin
+        `uvm_fatal("HVL_TOP","Timeout waiting for VIF registration completion from hdl_top")
+      end
+      #0;
+    end
+
+    uvm_hierarchy_push("hdl_top");
+
+{% for inst in BFMInstructions %}
+{% if inst["cmd"] == "start_block" %}
+    // Registering BFMs beneath path {{inst["topo"].path()}}
+    uvm_hierarchy_push("{{inst["topo"].name}}");
+{% elif inst["cmd"] == "start_loop" %}
+    // Starting new loop for arrayed path {{inst["topo"].path()}}
+    for (int {{inst["genvar"]}}=0;{{inst["genvar"]}}<{{inst["topo"].instance_array_size}};{{inst["genvar"]}}++) begin
+      uvm_hierarchy_push($sformatf("{{inst["topo"].name}}[%0d]",{{inst["genvar"]}}));
+{% elif inst["cmd"] == "instance_bfm" %} 
+    // Retrieving and registering BFMs for interface {{inst["topo"].path()}}
+    begin
+      automatic {{inst["bfm_info"].bfm_type}}_param_bridge_p{{macro.paramUseNested(inst["param_info"])}} bridge_p{% if not inst["arrayed"] %} = new(){% endif %};
+{% if inst["arrayed"] %}
+      for (int {{inst["genvar"]}}=0;{{inst["genvar"]}}<{{inst["topo"].instance_array_size}};{{inst["genvar"]}}++) begin
+        bridge_p = new();
+        bridge_p.register_bfms($sformatf("%s.{{inst["topo"].name}}[%0d].{{inst["topo"].name}}",uvm_hierarchy_string(),{{inst["genvar"]}}));
+      end
+{% else %}
+      bridge_p.register_bfms({uvm_hierarchy_string(),".{{inst["topo"].name}}"});
+{% endif %}
+    end
+{% elif inst["cmd"] == "end_loop" %}
+      uvm_hierarchy_pop();
+    end
+{% elif inst["cmd"] == "end" or inst["cmd"] == "end_block" %}
+    uvm_hierarchy_pop();
+{% endif %}
+{% endfor %}  
+
+    $timeformat(-9,3,"ns",5);
+    run_test();
+  end
+
+endmodule
+
+// pragma uvmf custom external begin
+// pragma uvmf custom external end
+
+{% endblock %}

@@ -1,0 +1,26 @@
+{% set fname = "{{vip_location}}/{{environment_location}}/{{name}}_env_pkg/{{name}}.core" %}
+CAPI=2:
+
+name: uvmf:environments:{{name}}
+
+filesets:
+  hvl:
+    files:
+    - "sv-uvm ? ({{name}}_env_pkg.sv)":
+         include_path: "."
+    file_type: systemVerilogSource
+    depend:
+{% for sub_env in env_pkgs %}
+      - uvmf:environments:{{sub_env}}
+{% endfor %}
+{% for agent in agent_pkgs %}
+      - uvmf:interfaces:{{agent}}
+{% endfor %}
+      - ":uvmf:base_pkg"
+
+# TODO: add in DPI filesets
+
+targets:
+  default:
+    filesets:
+      - hvl

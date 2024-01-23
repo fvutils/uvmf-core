@@ -1,0 +1,20 @@
+{% set fname = "{{vip_location}}/{{interface_location}}/{{name}}_pkg/{{name}}_common.compile" %}
+{% block description %}
+{% endblock %}
+{% block contents %}
+needs:
+# pragma uvmf custom needs_additional begin
+# pragma uvmf custom needs_additional end
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.compile
+incdir:
+# pragma uvmf custom incdir_additional begin
+# pragma uvmf custom incdir_additional end
+  - .
+  - ${uvm_path}/src
+src:
+# pragma uvmf custom src_additional begin
+# pragma uvmf custom src_additional end
+  - {{name}}_pkg_hdl.sv
+# pragma uvmf custom compile_additional begin
+# pragma uvmf custom compile_additional end
+{% endblock %}

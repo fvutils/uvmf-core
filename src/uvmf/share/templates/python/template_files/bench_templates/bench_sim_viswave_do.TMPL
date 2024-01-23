@@ -1,0 +1,43 @@
+{% set fname = "{{bench_location}}/{{name}}/sim/viswave.do" %}
+{% block description %} {% endblock %}
+
+{% block contents %}
+
+onerror resume
+wave tags F0
+wave update off
+
+{% for bfm in bfms %}
+{% if bfm.instanceArraySize == '' %}
+wave spacer -backgroundcolor Salmon { {{bfm.name}} }
+wave add uvm_test_top.{{bfm.sub_env_path}}.{{bfm.agent_inst_name}}.{{bfm.agent_inst_name}}_monitor.txn_stream -radix string -tag F0
+wave group {{bfm.name}}_bus
+wave add -group {{bfm.name}}_bus hdl_top.{{bfm.name}}_bus.* -radix hexadecimal -tag F0
+wave group {{bfm.name}}_bus -collapse
+wave insertion [expr [wave index insertpoint] +1]
+{% else %}
+wave spacer -backgroundcolor Salmon { {{bfm.name}}[0] }
+wave add uvm_test_top.{{bfm.sub_env_path}}.{{bfm.agent_inst_name}}[0].{{bfm.agent_inst_name}}[0]_monitor.txn_stream -radix string -tag F0
+wave group {{bfm.name}}_bus
+wave add -group {{bfm.name}}_bus hdl_top.{{bfm.name}}[0].{{bfm.name}}_bus.* -radix hexadecimal -tag F0
+wave group {{bfm.name}}_bus -collapse
+wave insertion [expr [wave index insertpoint] +1]
+{% endif %}
+{% endfor %}
+
+{% for qvip_hdl in qvip_hdl_modules %}
+wave spacer -backgroundcolor Salmon { {{qvip_hdl.unique_id_with_underscores}}qvip_hdl }
+{% for agent_name in qvip_hdl.agent_names %}
+wave spacer -backgroundcolor Salmon { {{qvip_hdl.unique_id_with_underscores}}qvip_hdl.{{agent_name}} }
+{% endfor %}
+wave group {{qvip_hdl.unique_id_with_underscores}}qvip_hdl_signals
+wave add -group {{qvip_hdl.unique_id_with_underscores}}qvip_hdl_signals hdl_top.{{qvip_hdl.unique_id_with_underscores}}qvip_hdl.* -radix hexadecimal -tag F0
+wave group {{qvip_hdl.unique_id_with_underscores}}qvip_hdl_signals -collapse
+wave insertion [expr [wave index insertpoint] +1]
+{% endfor %}
+
+
+wave update on
+WaveSetStreamView
+
+{% endblock %}

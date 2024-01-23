@@ -1,0 +1,14 @@
+Metadata-Version: 2.1
+Name: uvmf-core
+Version: 0.0.1
+Home-page: https://github.com/fvutils/uvmf-core
+Maintainer: Matthew Ballance
+Maintainer-email: matt.ballance@gmail.com
+License: Apache 2.0
+Keywords: SystemVerilog,Verilog,RTL,Coverage
+License-File: LICENSE
+Requires-Dist: voluptuous
+Requires-Dist: jinja2
+
+
+  

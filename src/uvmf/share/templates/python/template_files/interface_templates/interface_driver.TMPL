@@ -1,0 +1,49 @@
+{% set fname = "{{vip_location}}/{{interface_location}}/{{name}}_pkg/{{src_dir}}{{name}}_driver.svh" %}
+{% extends "base_template.TMPL" %}
+
+{% block description %}
+//----------------------------------------------------------------------
+//     
+// DESCRIPTION: 
+//
+//----------------------------------------------------------------------
+{% endblock %}
+
+{% block contents %}
+class {{name}}_driver extends uvmf_deparameterized_driver_base #(
+                   .CONFIG_T({{name}}_configuration),
+                   .REQ({{name}}_transaction),
+                   .RSP({{name}}_transaction));
+
+  `uvm_component_utils({{name}}_driver)
+
+// pragma uvmf custom class_item_additional begin
+// pragma uvmf custom class_item_additional end
+
+// ****************************************************************************
+// This function is the standard SystemVerilog constructor.
+//
+  function new( string name = "", uvm_component parent=null );
+    super.new( name, parent );
+  endfunction
+
+// ****************************************************************************
+// This function sends configuration object variables to the driver BFM 
+// using the configuration struct.
+//
+  virtual function void configure(input CONFIG_T cfg);
+    // parameterized extension implements this method
+  endfunction
+
+// **************************************************************************** 
+// This task is called by the run_phase in uvmf_driver_base.              
+  virtual task access( inout REQ txn );
+    // parameterized extension implements this method
+  endtask
+
+endclass
+
+// pragma uvmf custom external begin
+// pragma uvmf custom external end
+
+{% endblock %}

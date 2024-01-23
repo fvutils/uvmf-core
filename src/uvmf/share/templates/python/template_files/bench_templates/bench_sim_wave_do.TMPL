@@ -1,0 +1,48 @@
+{% set fname = "{{bench_location}}/{{name}}/sim/wave.do" %}
+{% block description %} {% endblock %}
+
+{% block contents %}
+
+onerror {resume}
+quietly WaveActivateNextPane {} 0
+
+{% for bfm in bfms %}
+{% if bfm.instanceArraySize == '' %}
+add wave -noupdate -divider {{bfm.name}} 
+add wave -noupdate /uvm_root/uvm_test_top/{{bfm.sub_env_path}}/{{bfm.agent_inst_name}}/{{bfm.agent_inst_name}}_monitor/txn_stream
+add wave -noupdate -group {{bfm.name}}_bus /hdl_top/{{bfm.name}}_bus/*
+{% else %}
+add wave -noupdate -divider {{bfm.name}}[0] 
+add wave -noupdate /uvm_root/uvm_test_top/{{bfm.sub_env_path}}/{{bfm.agent_inst_name}}[0]/{{bfm.agent_inst_name}}[0]_monitor/txn_stream
+add wave -noupdate -group {{bfm.name}}_bus[0] /hdl_top/{{bfm.name}}[0]/{{bfm.name}}_bus/*
+{% endif %}
+{% endfor %}
+
+{% for qvip_hdl in qvip_hdl_modules %}
+add wave -noupdate -divider {{qvip_hdl.unique_id_with_underscores}}qvip_hdl
+{% for agent_name in qvip_hdl.agent_names %}
+add wave -noupdate -divider  {{qvip_hdl.unique_id_with_underscores}}qvip_hdl.{{agent_name}}
+{% endfor %}
+add wave -noupdate -group {{qvip_hdl.unique_id_with_underscores}}qvip_hdl_signals /hdl_top/{{qvip_hdl.unique_id_with_underscores}}qvip_hdl/*
+{% endfor %}
+
+
+TreeUpdate [SetDefaultTree]
+quietly wave cursor active 0
+configure wave -namecolwidth 472
+configure wave -valuecolwidth 100
+configure wave -justifyvalue left
+configure wave -signalnamewidth 0
+configure wave -snapdistance 10
+configure wave -datasetprefix 0
+configure wave -rowmargin 4
+configure wave -childrowmargin 2
+configure wave -gridoffset 0
+configure wave -gridperiod 1
+configure wave -griddelta 40
+configure wave -timeline 0
+configure wave -timelineunits ns
+update
+WaveRestoreZoom {27 ns} {168 ns}
+
+{% endblock %}
