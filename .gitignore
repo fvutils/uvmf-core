@@ -1,3 +1,5 @@
 
 packages/
 __pycache__/
+.eggs/
+
