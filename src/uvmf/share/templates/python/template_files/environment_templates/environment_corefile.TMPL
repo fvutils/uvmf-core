@@ -1,22 +1,40 @@
 {% set fname = "{{vip_location}}/{{environment_location}}/{{name}}_env_pkg/{{name}}.core" %}
 CAPI=2:
 
+# pragma uvmf custom corefile_head_additional_items begin
+# pragma uvmf custom corefile_head_additional_items end
+
 name: uvmf:environments:{{name}}
 
 filesets:
   hvl:
     files:
+# pragma uvmf custom hvl_fileset_additional_items_pre begin
+# pragma uvmf custom hvl_fileset_additional_items_pre end
     - "sv-uvm ? ({{name}}_env_pkg.sv)":
          include_path: "."
+# pragma uvmf custom hvl_fileset_additional_items_post begin
+# pragma uvmf custom hvl_fileset_additional_items_post end
     file_type: systemVerilogSource
     depend:
+# pragma uvmf custom hvl_fileset_depend_additional_items_pre begin
+# pragma uvmf custom hvl_fileset_depend_additional_items_pre end
 {% for sub_env in env_pkgs %}
       - uvmf:environments:{{sub_env}}
 {% endfor %}
+# pragma uvmf custom hvl_fileset_depend_additional_items_pre_agents begin
+# pragma uvmf custom hvl_fileset_depend_additional_items_pre_agents end
 {% for agent in agent_pkgs %}
       - uvmf:interfaces:{{agent}}
 {% endfor %}
+# pragma uvmf custom hvl_fileset_depend_additional_items_post_agents begin
+# pragma uvmf custom hvl_fileset_depend_additional_items_post_agents end
       - ":uvmf:base_pkg"
+# pragma uvmf custom hvl_fileset_depend_additional_items_post begin
+# pragma uvmf custom hvl_fileset_depend_additional_items_post end
+
+# pragma uvmf custom filesets_additional_items begin
+# pragma uvmf custom filesets_additional_items end
 
 # TODO: add in DPI filesets
 
@@ -24,3 +42,6 @@ targets:
   default:
     filesets:
       - hvl
+
+# pragma uvmf custom corefile_tail_additional_items begin
+# pragma uvmf custom corefile_tail_additional_items end

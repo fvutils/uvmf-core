@@ -1,11 +1,16 @@
 {% set fname = "{{bench_location}}/{{name}}/{{name}}.core" %}
 CAPI=2:
 
+# pragma uvmf custom corefile_head_additional_items begin
+# pragma uvmf custom corefile_head_additional_items end
+
 name: uvmf:project_benches:{{name}}
 
 filesets:
   hvl:
     files:
+# pragma uvmf custom hvl_fileset_additional_items_pre begin
+# pragma uvmf custom hvl_fileset_additional_items_pre end
     - "sv-uvm ? (tb/parameters/{{name}}_parameters_pkg.sv)":
          include_path: "tb/parameters"
     - "sv-uvm ? (tb/sequences/{{name}}_sequences_pkg.sv)":
@@ -16,9 +21,15 @@ filesets:
          include_path: "tb/testbench"
     - "sv-uvm ? (tb/testbench/hvl_top.sv)":
          include_path: "tb/testbench"
+# pragma uvmf custom hvl_fileset_additional_items_post begin
+# pragma uvmf custom hvl_fileset_additional_items_post end
     file_type: systemVerilogSource
     depend:
+# pragma uvmf custom hvl_fileset_depend_additional_items_pre begin
+# pragma uvmf custom hvl_fileset_depend_additional_items_pre end
       - uvmf:environments:{{env_name}}
+# pragma uvmf custom hvl_fileset_depend_additional_items_post begin
+# pragma uvmf custom hvl_fileset_depend_additional_items_post end
 
 # TODO: add in DPI filesets
 
@@ -26,3 +37,6 @@ targets:
   default:
     filesets:
       - hvl
+      
+# pragma uvmf custom corefile_tail_additional_items begin
+# pragma uvmf custom corefile_tail_additional_items end
