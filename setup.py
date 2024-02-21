@@ -24,6 +24,9 @@ setup(
   entry_points={
     'console_scripts': [
       'uvmf = uvmf.__main__:main'
+    ],
+    'ivpm.pkginfo': [
+        'uvmf-core = uvmf.pkginfo:PkgInfo'
     ]
   },
   setup_requires=[
