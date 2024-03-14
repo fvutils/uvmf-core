@@ -25,7 +25,7 @@ import ivpm
 class PkgInfo(ivpm.PkgInfo):
 
     def __init__(self):
-        super().__init__("pyhdl-pi-if")
+        super().__init__("uvmf-core")
         pass
 
     def getPaths(self, kind):
